@@ -8,6 +8,8 @@ class ProgramSchedules:
         self.index_data = {}  # key: ID, value: person info
 
     def assign_off_times(self):
+        # TODO: consider a ratio of staff off
+
     # Load index.csv
         with open("index.csv", newline='') as index_file:
             reader = csv.DictReader(index_file)
