@@ -9,14 +9,17 @@ from collections import defaultdict
 import os
 from datetime import datetime, timedelta
 import sys
-
-
+import pandas as pd
 
 class ProgramSchedules:
     def __init__(self, week_start_date):
         self.index_data = {}  # key: ID, value: person info
         self.day_off_data = {}
         self.week_start_date = datetime.strptime(week_start_date, "%d/%m/%Y")
+        self.skills_schedule = {}
+        self.skills_by_staff = {}
+        self.staff_info = pd.read_csv("index.csv")
+        
 
     def assign_off_times(self):
 
@@ -135,7 +138,6 @@ class ProgramSchedules:
         print(f"Assignment complete. Results saved to {output_path}")
         if unassigned_log:
             print(f"Some assignments required fallback. Details logged to {log_path}")    
-
     
     def assign_freetime_locations(self):
 
@@ -278,6 +280,181 @@ class ProgramSchedules:
 
         print("Weekly freetime schedule saved to freetime_schedules/weekly_schedule.csv")
 
+    def load_staff_info(self, index_path="index.csv"):
+        with open(index_path, newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                staff_id = int(row["id"])
+                self.staff_info[staff_id] = {
+                    "email": row["personal email"],
+                    "name": row["name"],
+                    "lifeguard": row["lifeguard certification"].strip().lower() == "yes",
+                    "archery": row["archery certification"].strip().lower() == "yes",
+                    "high_ropes": row["high ropes certification"].strip().lower() == "yes",
+                    "fishing": row["fishing proficiency"].strip().lower() == "yes"
+                }
+
+    def assign_skills_classes(self):
+
+        # Load required data
+        with open("skill_class_schedules/classes.json") as f:
+            class_configs = json.load(f)
+        with open("skill_class_schedules/fixed_skills_off.json") as f:
+            fixed_off_periods = json.load(f)
+
+        staff_data = pd.read_csv("index.csv")
+        staff_data = staff_data.set_index("id").to_dict("index")
+
+        staff_daily_schedule = defaultdict(lambda: defaultdict(dict))
+        class_assignments = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        class_capacity = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        unassigned_log = []
+
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        periods = [1, 2, 3]
+
+        # First assign coordinators and fixed offs
+        for class_name, config in class_configs.items():
+            for coord_id in config["coordinators"]:
+                for day in weekdays:
+                    for period in config["preferred_periods"]:
+                        if config.get("double_period") and period == 3:
+                            continue
+                        assigned = False
+                        if coord_id in staff_daily_schedule:
+                            if day in staff_daily_schedule[coord_id] and period in staff_daily_schedule[coord_id][day]:
+                                continue
+                        if class_capacity[class_name][day][period] < config["staff_required"]:
+                            staff_daily_schedule[coord_id][day][period] = {"class": class_name, "role": "lead"}
+                            class_assignments[day][period][class_name].append((coord_id, "lead"))
+                            class_capacity[class_name][day][period] += 1
+                            assigned = True
+                        if assigned:
+                            break
+
+        for staff_id, day_periods in fixed_off_periods.items():
+            for day, periods_off in day_periods.items():
+                for period in periods_off:
+                    staff_daily_schedule[int(staff_id)][day][period] = {"class": "OFF", "role": "none"}
+
+        # Assign remaining classes
+        for day in weekdays:
+            for period in periods:
+                for class_name, config in class_configs.items():
+                    if period not in config["preferred_periods"]:
+                        continue
+                    if config.get("double_period") and period == 3:
+                        continue
+                    needed = config["staff_required"] - class_capacity[class_name][day][period]
+                    if needed <= 0:
+                        continue
+                    eligible_staff = []
+                    for staff_id, info in staff_data.items():
+                        if staff_id in config.get("coordinators", []):
+                            continue
+                        if day in staff_daily_schedule[staff_id] and period in staff_daily_schedule[staff_id][day]:
+                            continue
+                        if config.get("double_period") and ((period + 1) in staff_daily_schedule[staff_id][day]):
+                            continue
+
+                        if class_name == "Waterfront" and info["lifeguard certification"] != "Yes":
+                            continue
+                        if class_name == "Archery" and info["archery certification"] != "Yes":
+                            continue
+                        if class_name == "High Ropes" and info["high ropes certification"] != "Yes":
+                            continue
+                        if class_name == "Fishing" and info["fishing proficiency"] != "Yes":
+                            continue
+
+                        eligible_staff.append(staff_id)
+
+                    for i in range(min(needed, len(eligible_staff))):
+                        sid = eligible_staff[i]
+                        role = "assistant"
+                        if class_name == "Fishing" and info["fishing proficiency"] == "Yes":
+                            role = "lead"
+                        staff_daily_schedule[sid][day][period] = {"class": class_name, "role": role}
+                        class_assignments[day][period][class_name].append((sid, role))
+                        class_capacity[class_name][day][period] += 1
+                        if config.get("double_period"):
+                            staff_daily_schedule[sid][day][period + 1] = {"class": class_name, "role": role}
+
+        # Track unassigned periods
+        for staff_id in staff_data:
+            for day in weekdays:
+                for period in periods:
+                    if period not in staff_daily_schedule[staff_id][day]:
+                        staff_daily_schedule[staff_id][day][period] = {"class": "OFF", "role": "none"}
+                        unassigned_log.append({"id": staff_id, "day": day, "period": period})
+
+        # Save CSV
+        os.makedirs("skill_class_schedules", exist_ok=True)
+        with open("skill_class_schedules/skills_schedule.csv", "w", newline="") as f:
+            writer = csv.writer(f)
+            header = ["id"] + [f"{day} P{p}" for day in weekdays for p in periods]
+            writer.writerow(header)
+            for staff_id in staff_data:
+                row = [staff_id]
+                for day in weekdays:
+                    for p in periods:
+                        entry = staff_daily_schedule[staff_id][day][p]
+                        if entry["class"] == "OFF":
+                            row.append("OFF")
+                        elif entry["role"] == "lead":
+                            row.append(f"Lead {entry['class']}")
+                        elif entry["role"] == "assistant":
+                            row.append(f"Assistant {entry['class']}")
+                        else:
+                            row.append("Unassigned")
+                writer.writerow(row)
+
+        with open("skill_class_schedules/unassigned_skills_log.csv", "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["id", "day", "period"])
+            writer.writeheader()
+            writer.writerows(unassigned_log)
+
+        self.skills_schedule = class_assignments
+        self.skills_by_staff = staff_daily_schedule
+
+
+        print("Weekly freetime schedule saved to skill_class_schedules/skills_schedule.csv")
+
+    def export_skills_schedule(self, output_path="skill_class_schedules/skills_schedule.csv"):
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        """
+        Exports self.skills_by_staff to a CSV with human-readable formatting.
+        Output file: skill_class_schedules/skills_schedule.csv
+        """
+        def format_assignment(assignment):
+            cls = assignment.get("class", "Unassigned")
+            role = assignment.get("role", "none")
+
+            if cls == "OFF":
+                return "OFF"
+            elif cls == "Unassigned":
+                return "Unassigned"
+            elif role == "lead":
+                return f"Lead {cls}"
+            elif role == "assistant":
+                return f"Assistant {cls}"
+            else:
+                return cls
+
+        formatted_schedule = {}
+
+        for staff_id, daily_schedule in self.skills_by_staff.items():
+            row = {"id": staff_id}
+            for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]:
+                for period in [1, 2, 3]:
+                    assignment = daily_schedule.get(day, {}).get(period, {"class": "Unassigned", "role": "none"})
+                    column_name = f"{day} P{period}"
+                    row[column_name] = format_assignment(assignment)
+            formatted_schedule[staff_id] = row
+
+        df = pd.DataFrame.from_dict(formatted_schedule, orient="index")
+        output_dir = "skill_class_schedules"
+        os.makedirs(output_dir, exist_ok=True)
+        df.to_csv(os.path.join(output_dir, "skills_schedule.csv"), index=False)
 
 def get_next_monday(today=None):
     today = today or datetime.today()
@@ -299,6 +476,9 @@ def main():
     scheduler = ProgramSchedules(week_start_date)
     scheduler.assign_off_times()
     scheduler.assign_freetime_locations()
+    scheduler.load_staff_info("index.csv")
+    scheduler.assign_skills_classes()
+    scheduler.export_skills_schedule()
 
 if __name__ == "__main__":
     main()
