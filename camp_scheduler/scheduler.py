@@ -1,14 +1,11 @@
 import os
-import sys
 import csv
 import random
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 import pandas as pd
-import shutil
 import importlib.resources
-import pathlib
 
 class ProgramSchedules:
     def __init__(self, week_start_date):
@@ -54,254 +51,322 @@ class ProgramSchedules:
         return path
 
     def assign_off_times(self):
-        # Load index.csv
-        with open(self.index_path, newline='') as index_file:
-            reader = csv.DictReader(index_file)
-            for row in reader:
-                self.index_data[row['id']] = row
+        try:
+            # Load blackout periods from dates.json
+            with open(self._get_data_path("dates.json")) as f:
+                dates_config = json.load(f)
+            
+            # Convert blackout periods to datetime objects with 1-day buffer
+            blackout_periods = []
+            for period in dates_config["blackout_periods"].values():
+                start_date = datetime.strptime(period["start"], "%Y-%m-%d") - timedelta(days=1)
+                end_date = datetime.strptime(period["end"], "%Y-%m-%d") + timedelta(days=1)
+                blackout_periods.append((start_date, end_date))
+            
+            def is_blackout_date(date_str):
+                try:
+                    date = datetime.strptime(date_str, "%d/%m/%Y")
+                    for start, end in blackout_periods:
+                        if start <= date <= end:
+                            return True
+                    return False
+                except ValueError:
+                    return True  # Treat invalid dates as blackout
 
-        staff_ids = list(self.index_data.keys())
-        staff_count = len(staff_ids)
-        max_per_slot = max(1, int(staff_count * 0.25))
+            def is_consecutive_daynight(day_str, night_str):
+                try:
+                    day_date = datetime.strptime(day_str, "%d/%m/%Y")
+                    night_date = datetime.strptime(night_str, "%d/%m/%Y")
+                    return night_date == day_date + timedelta(days=1)
+                except:
+                    return False
 
-        # Read off_times_form.csv from data directory
-        off_schedule_path = self._get_data_path("off_times_form.csv")
-        assignments = []
-        unassigned_log = []
+            # Load staff data
+            with open(self.index_path, newline='') as index_file:
+                reader = csv.DictReader(index_file)
+                for row in reader:
+                    self.index_data[row['id']] = row
 
-        used_day_slots = defaultdict(set)
-        used_night_slots = defaultdict(set)
-        assigned_day = {}
-        assigned_night = {}
+            staff_ids = list(self.index_data.keys())
+            staff_count = len(staff_ids)
+            max_per_slot = max(1, int(staff_count * 0.25))
 
-        with open(off_schedule_path, newline='') as off_file:
-            reader = csv.DictReader(off_file)
-            for row in reader:
-                person_id = row['id']
-                if person_id not in self.index_data:
-                    continue
+            # Read time off requests
+            off_schedule_path = self._get_data_path("off_times_form.csv")
+            assignments = []
+            unassigned_log = []
 
-                coverage_id = self.index_data[person_id].get("coverage", "").strip()
-                coverage_day = assigned_day.get(coverage_id)
-                coverage_night = assigned_night.get(coverage_id)
+            used_day_slots = defaultdict(set)
+            used_night_slots = defaultdict(set)
+            assigned_day = {}
+            assigned_night = {}
 
-                # Weighted shuffle of options
-                def weighted_choice_order(first, second, weight_first=0.6):
-                    return [first, second] if random.random() < weight_first else [second, first]
+            with open(off_schedule_path, newline='') as off_file:
+                reader = csv.DictReader(off_file)
+                for row in reader:
+                    person_id = row['id']
+                    if person_id not in self.index_data:
+                        continue
 
-                possible_days = weighted_choice_order(row['first option day'], row['second option day'])
-                possible_nights = weighted_choice_order(row['first option night'], row['second option night'])
+                    # Process day off options (filter blackouts)
+                    day_options = []
+                    for day in [row['first option day'], row['second option day']]:
+                        if day and not is_blackout_date(day):
+                            day_options.append(day)
+                    
+                    # Process night off options (filter blackouts)
+                    night_options = []
+                    for night in [row['first option night'], row['second option night']]:
+                        if night and not is_blackout_date(night):
+                            night_options.append(night)
 
-                day_off = None
-                for option in possible_days:
-                    if len(used_day_slots[option]) < max_per_slot and coverage_day != option:
-                        day_off = option
-                        used_day_slots[option].add(person_id)
-                        assigned_day[person_id] = day_off
-                        break
+                    # Skip if no valid options
+                    if not day_options or not night_options:
+                        unassigned_log.append({
+                            'id': person_id,
+                            'name': row['name'],
+                            'email': row['personal email'],
+                            'day_off': "Unassigned",
+                            'night_off': "Unassigned",
+                            'reason': "All preferred dates in blackout periods"
+                        })
+                        continue
 
-                night_off = None
-                for option in possible_nights:
-                    if len(used_night_slots[option]) < max_per_slot and coverage_night != option:
-                        night_off = option
-                        used_night_slots[option].add(person_id)
-                        assigned_night[person_id] = night_off
-                        break
-
-                if not day_off or not night_off:
-                    unassigned_log.append({
-                        'id': person_id,
-                        'name': row['name'],
-                        'email': row['personal email'],
-                        'day_off': day_off or "Unassigned",
-                        'night_off': night_off or "Unassigned",
-                        'reason': "No available slots without coverage conflict or overcapacity"
-                    })
-
-                # Fallback ignoring coverage constraint
-                if not day_off:
-                    for option in possible_days:
+                    # Assign day off (try both options)
+                    day_off = None
+                    for option in day_options:
                         if len(used_day_slots[option]) < max_per_slot:
                             day_off = option
                             used_day_slots[option].add(person_id)
                             assigned_day[person_id] = day_off
                             break
-                    if not day_off:
-                        day_off = "Unassigned"
 
-                if not night_off:
-                    for option in possible_nights:
+                    # Assign night off (with consecutive check)
+                    night_off = None
+                    for option in night_options:
+                        # Check if this night off would be consecutive to day off
+                        if day_off and is_consecutive_daynight(day_off, option):
+                            continue  # Skip this night option
+                            
                         if len(used_night_slots[option]) < max_per_slot:
                             night_off = option
                             used_night_slots[option].add(person_id)
                             assigned_night[person_id] = night_off
                             break
-                    if not night_off:
-                        night_off = "Unassigned"
 
-                assignments.append({
-                    'id': person_id,
-                    'name': row['name'],
-                    'email': row['personal email'],
-                    'day_off': day_off,
-                    'night_off': night_off,
-                    'notes': row['notes']
-                })
+                    # Handle unassigned cases
+                    if not day_off or not night_off:
+                        reason = "No available slots"
+                        if day_off and not night_off:
+                            reason = "No valid night off (would be consecutive to day off)"
+                        
+                        unassigned_log.append({
+                            'id': person_id,
+                            'name': row['name'],
+                            'email': row['personal email'],
+                            'day_off': day_off or "Unassigned",
+                            'night_off': night_off or "Unassigned",
+                            'reason': reason
+                        })
 
-        # Write results directly to output
-        results_path = self._write_output("day_off_results.csv", 
-            pd.DataFrame(assignments)[['id', 'name', 'email', 'day_off', 'night_off', 'notes']])
+                    # Add to final assignments
+                    assignments.append({
+                        'id': person_id,
+                        'name': row['name'],
+                        'email': row['personal email'],
+                        'day_off': day_off or "Unassigned",
+                        'night_off': night_off or "Unassigned",
+                        'notes': row.get('notes', '')
+                    })
+
+            # Write outputs
+            results_path = os.path.join(self.output_dir, "day_off_results.csv")
+            pd.DataFrame(assignments or [{
+                'id': '', 'name': '', 'email': '', 
+                'day_off': '', 'night_off': '', 'notes': ''
+            }]).to_csv(results_path, index=False)
+            
+            unassigned_path = os.path.join(self.output_dir, "day_off_unassigned.csv")
+            pd.DataFrame(unassigned_log or [{
+                'id': '', 'name': '', 'email': '',
+                'day_off': '', 'night_off': '', 'reason': 'No assignments generated'
+            }]).to_csv(unassigned_path, index=False)
+            
+            if not assignments:
+                print("Warning: No valid assignments generated - using empty template")
+            return assignments
         
-        # Write unassigned log
-        unassigned_path = self._write_output("day_off_unassigned.csv", 
-            pd.DataFrame(unassigned_log)[['id', 'name', 'email', 'day_off', 'night_off', 'reason']])
-
-        print(f"Assignment complete. Results saved to {results_path}")
-        if unassigned_log:
-            print(f"Some assignments required fallback. Details logged to {unassigned_path}")
+        except Exception as e:
+            print(f"Error in assign_off_times: {str(e)}")
+            # Create empty files to prevent downstream errors
+            empty_df = pd.DataFrame(columns=[
+                'id', 'name', 'email', 'day_off', 'night_off', 'notes'
+            ])
+            empty_df.to_csv(os.path.join(self.output_dir, "day_off_results.csv"), index=False)
+            return []
 
     def assign_freetime_locations(self):
-        # Load index.csv
-        with open(self.index_path, newline='') as index_file:
-            reader = csv.DictReader(index_file)
-            for row in reader:
-                self.index_data[row['id']] = row
+        try:
+            # Load index.csv
+            with open(self.index_path, newline='') as index_file:
+                reader = csv.DictReader(index_file)
+                for row in reader:
+                    self.index_data[row['id']] = row
 
-        # Load off_schedules/results.csv from output
-        with open(os.path.join(self.output_dir, "day_off_results.csv"), newline='') as off_file:
-            reader = csv.DictReader(off_file)
-            for row in reader:
-                self.day_off_data[row['id']] = row['day_off']
+            # Load off_schedules/results.csv from output
+            off_results_path = os.path.join(self.output_dir, "day_off_results.csv")
+        
+            if not os.path.exists(off_results_path):
+                raise FileNotFoundError("day_off_results.csv not found")
+                
+            with open(off_results_path, newline='') as off_file:
+                reader = csv.DictReader(off_file)
+                
+                # Check if file is empty
+                if not reader.fieldnames:
+                    print("Warning: Empty day off results - using default values")
+                    self.day_off_data = {}
+                    return
+                    
+                self.day_off_data = {
+                    row['id']: row['day_off']
+                    for row in reader 
+                    if row.get('id') and row.get('day_off')
+                }
 
-        # Prepare day name and date mapping for Monday-Friday only (5 days)
-        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-        day_to_date = {}
-        for i, day in enumerate(weekdays):
-            date_str = (self.week_start_date + timedelta(days=i)).strftime("%d/%m/%Y")
-            day_to_date[day] = date_str
+            # Prepare day name and date mapping for Monday-Friday only (5 days)
+            weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+            day_to_date = {}
+            for i, day in enumerate(weekdays):
+                date_str = (self.week_start_date + timedelta(days=i)).strftime("%d/%m/%Y")
+                day_to_date[day] = date_str
 
-        # Determine unavailable staff per freetime day (day after off start)
-        unavailable = defaultdict(set)  # day -> set of staff IDs
-        for staff_id, off_date_str in self.day_off_data.items():
-            try:
-                off_date = datetime.strptime(off_date_str, "%d/%m/%Y")
-                missed_day = (off_date + timedelta(days=1)).strftime("%A")
-                if missed_day in weekdays:
-                    unavailable[missed_day].add(staff_id)
-            except:
-                continue  # skip malformed dates
+            # Determine unavailable staff per freetime day (day after off start)
+            unavailable = defaultdict(set)  # day -> set of staff IDs
+            for staff_id, off_date_str in self.day_off_data.items():
+                try:
+                    off_date = datetime.strptime(off_date_str, "%d/%m/%Y")
+                    missed_day = (off_date + timedelta(days=1)).strftime("%A")
+                    if missed_day in weekdays:
+                        unavailable[missed_day].add(staff_id)
+                except:
+                    continue  # skip malformed dates
 
-        # Load coordinators.json and locations.json from data directory
-        with open(self._get_data_path("coordinators.json")) as f:
-            coordinator_data = json.load(f)
+            # Load coordinators.json and locations.json from data directory
+            with open(self._get_data_path("coordinators.json")) as f:
+                coordinator_data = json.load(f)
 
-        with open(self._get_data_path("locations.json")) as f:
-            locations = json.load(f)
+            with open(self._get_data_path("locations.json")) as f:
+                locations = json.load(f)
 
-        # Identify certified groups
-        lifeguards = {sid for sid, row in self.index_data.items() if row.get('lifeguard certification', '').strip().lower() == 'yes'}
-        archers = {sid for sid, row in self.index_data.items() if row.get('archery certification', '').strip().lower() == 'yes'}
-        climbers = {sid for sid, row in self.index_data.items() if row.get('high ropes certification', '').strip().lower() == 'yes'}
-        fishers = {sid for sid, row in self.index_data.items() if row.get('fishing proficiency', '').strip().lower() == 'yes'}
+            # Identify certified groups
+            lifeguards = {sid for sid, row in self.index_data.items() if row.get('lifeguard certification', '').strip().lower() == 'yes'}
+            archers = {sid for sid, row in self.index_data.items() if row.get('archery certification', '').strip().lower() == 'yes'}
+            climbers = {sid for sid, row in self.index_data.items() if row.get('high ropes certification', '').strip().lower() == 'yes'}
+            fishers = {sid for sid, row in self.index_data.items() if row.get('fishing proficiency', '').strip().lower() == 'yes'}
 
-        assignment_counts = defaultdict(int)
-        schedule = {day: {} for day in weekdays}
+            assignment_counts = defaultdict(int)
+            schedule = {day: {} for day in weekdays}
 
-        for day in weekdays:
-            assigned = set()
-            lifeguard_pool = lifeguards - unavailable[day]
+            for day in weekdays:
+                assigned = set()
+                lifeguard_pool = lifeguards - unavailable[day]
 
-            # Assign coordinators
-            for location, ids in coordinator_data.items():
-                for staff_id in ids:
-                    if staff_id not in unavailable[day] and staff_id not in assigned:
-                        schedule[day][location] = staff_id
-                        assigned.add(staff_id)
-                        assignment_counts[staff_id] += 1
-                        break
+                # Assign coordinators
+                for location, ids in coordinator_data.items():
+                    for staff_id in ids:
+                        if staff_id not in unavailable[day] and staff_id not in assigned:
+                            schedule[day][location] = staff_id
+                            assigned.add(staff_id)
+                            assignment_counts[staff_id] += 1
+                            break
 
-            # Assign minimum 3 lifeguards
-            if "Lifeguard" not in schedule[day]:
-                schedule[day]["Lifeguard"] = []
-            lg_assigned = 0
-            for lg in sorted(lifeguard_pool, key=lambda x: assignment_counts[x]):
-                if lg not in assigned:
-                    schedule[day]["Lifeguard"].append(lg)
-                    assigned.add(lg)
-                    assignment_counts[lg] += 1
-                    lg_assigned += 1
-                    if lg_assigned >= 3:
-                        break
+                # Assign minimum 3 lifeguards
+                if "Lifeguard" not in schedule[day]:
+                    schedule[day]["Lifeguard"] = []
+                lg_assigned = 0
+                for lg in sorted(lifeguard_pool, key=lambda x: assignment_counts[x]):
+                    if lg not in assigned:
+                        schedule[day]["Lifeguard"].append(lg)
+                        assigned.add(lg)
+                        assignment_counts[lg] += 1
+                        lg_assigned += 1
+                        if lg_assigned >= 3:
+                            break
 
-            # Assign other locations
-            for location in locations:
-                if location in schedule[day] or location == "Lifeguard":
-                    continue
-                if location in ["Archery", "Climbing"] and day in ["Tuesday", "Thursday"]:
-                    continue
+                # Assign other locations
+                for location in locations:
+                    if location in schedule[day] or location == "Lifeguard":
+                        continue
+                    if location in ["Archery", "Climbing"] and day in ["Tuesday", "Thursday"]:
+                        continue
 
-                # Certification pools
-                if location == "Archery":
-                    pool = archers
-                elif location == "Climbing":
-                    pool = climbers
-                elif location == "Fishing":
-                    pool = fishers
-                else:
-                    pool = set(self.index_data.keys())
+                    # Certification pools
+                    if location == "Archery":
+                        pool = archers
+                    elif location == "Climbing":
+                        pool = climbers
+                    elif location == "Fishing":
+                        pool = fishers
+                    else:
+                        pool = set(self.index_data.keys())
 
-                pool = pool - assigned - unavailable[day]
+                    pool = pool - assigned - unavailable[day]
 
-                # Apply department restriction
-                restricted_departments = {"Mad City", "Chippe", "Tamakwa"}
-                if location in restricted_departments:
-                    pool = {sid for sid in pool if self.index_data[sid].get("department", "").strip() == location}
+                    # Apply department restriction
+                    restricted_departments = {"Mad City", "Chippe", "Tamakwa"}
+                    if location in restricted_departments:
+                        pool = {sid for sid in pool if self.index_data[sid].get("department", "").strip() == location}
 
-                if not pool:
-                    continue
+                    if not pool:
+                        continue
 
-                chosen = min(pool, key=lambda x: assignment_counts[x])
-                schedule[day][location] = chosen
-                assigned.add(chosen)
-                assignment_counts[chosen] += 1
-
-            # Add more lifeguards if all other locations are covered
-            if isinstance(schedule[day].get("Lifeguard"), list) and len(schedule[day]) >= len(locations) - 2:
-                while len(schedule[day]["Lifeguard"]) < 5:
-                    extra = [lg for lg in lifeguard_pool if lg not in assigned]
-                    if not extra:
-                        break
-                    chosen = min(extra, key=lambda x: assignment_counts[x])
-                    schedule[day]["Lifeguard"].append(chosen)
+                    chosen = min(pool, key=lambda x: assignment_counts[x])
+                    schedule[day][location] = chosen
                     assigned.add(chosen)
                     assignment_counts[chosen] += 1
 
-            # Assign leftover staff to "Off"
-            off_candidates = set(self.index_data.keys()) - assigned - unavailable[day]
-            for staff_id in off_candidates:
-                schedule[day].setdefault("Off", []).append(staff_id)
-                assigned.add(staff_id)
-                assignment_counts[staff_id] += 1
+                # Add more lifeguards if all other locations are covered
+                if isinstance(schedule[day].get("Lifeguard"), list) and len(schedule[day]) >= len(locations) - 2:
+                    while len(schedule[day]["Lifeguard"]) < 5:
+                        extra = [lg for lg in lifeguard_pool if lg not in assigned]
+                        if not extra:
+                            break
+                        chosen = min(extra, key=lambda x: assignment_counts[x])
+                        schedule[day]["Lifeguard"].append(chosen)
+                        assigned.add(chosen)
+                        assignment_counts[chosen] += 1
 
-        # Prepare output data
-        output_rows = []
-        for day in weekdays:
-            date = day_to_date[day]
-            for location, staff in schedule[day].items():
-                if isinstance(staff, list):
-                    for s in staff:
-                        output_rows.append([day, date, location, s])
-                else:
-                    output_rows.append([day, date, location, staff])
-            # Also write staff who are off that day explicitly
-            for staff_id in unavailable[day]:
-                output_rows.append([day, date, "Day Off", staff_id])
+                # Assign leftover staff to "Off"
+                off_candidates = set(self.index_data.keys()) - assigned - unavailable[day]
+                for staff_id in off_candidates:
+                    schedule[day].setdefault("Off", []).append(staff_id)
+                    assigned.add(staff_id)
+                    assignment_counts[staff_id] += 1
 
-        # Write directly to output
-        freetime_path = self._write_output("freetime_schedule.csv", 
-            [["Day", "Date", "Location", "Assigned_Staff_ID"]] + output_rows)
+            # Prepare output data
+            output_rows = []
+            for day in weekdays:
+                date = day_to_date[day]
+                for location, staff in schedule[day].items():
+                    if isinstance(staff, list):
+                        for s in staff:
+                            output_rows.append([day, date, location, s])
+                    else:
+                        output_rows.append([day, date, location, staff])
+                # Also write staff who are off that day explicitly
+                for staff_id in unavailable[day]:
+                    output_rows.append([day, date, "Day Off", staff_id])
 
-        print(f"Weekly freetime schedule saved to {freetime_path}")
+            # Write directly to output
+            freetime_path = self._write_output("freetime_schedule.csv", 
+                [["Day", "Date", "Location", "Assigned_Staff_ID"]] + output_rows)
+
+            print(f"Weekly freetime schedule saved to {freetime_path}")
+
+        except Exception as e:
+            print(f"Error loading day off results: {str(e)}")
+            self.day_off_data = {}  # Fallback to empty data
 
     def load_staff_info(self, index_path=None):
         path = index_path if index_path else self.index_path
@@ -684,14 +749,23 @@ class ProgramSchedules:
         print(f"✅ Summary log created at {log_path}")
 
     def run_full_schedule(self):
-        """Orchestrate the entire scheduling process"""
         print("Starting scheduling process...")
         
-        self.assign_off_times()
-        self.assign_freetime_locations()
-        self.load_staff_info()
-        self.assign_skills_classes()
-        self.assign_campers_to_skills()
-        self.export_output_summary()
-        
-        print(f"Scheduling process completed successfully! All outputs in {self.output_dir}")
+        try:
+            if not self.assign_off_times():
+                print("Warning: Proceeding with limited day off data")
+                
+            self.assign_freetime_locations()
+            self.load_staff_info()
+            self.assign_skills_classes()
+            self.assign_campers_to_skills()
+            self.export_output_summary()
+            
+        except Exception as e:
+            print(f"Scheduling failed: {str(e)}")
+            # Create minimal output for debugging
+            with open(os.path.join(self.output_dir, "ERROR_LOG.txt"), 'w') as f:
+                f.write(f"Scheduling failed at {datetime.now()}\nError: {str(e)}")
+            raise  # Re-raise if you want to see the full traceback
+            
+        print("Scheduling process completed!")
