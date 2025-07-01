@@ -1,0 +1,13 @@
+{
+  "130": {
+    "Monday": [2],
+    "Tuesday": [1, 3],
+    "Wednesday": [2],
+    "Thursday": [1, 2, 3], 
+    "Friday": [3]
+  },
+  "134": {
+    "Monday": [3],
+    "Wednesday": [1, 2]
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "Waterfront": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 4,
+    "preferred_periods": [1, 2, 3]
+  },
+  "Basketball": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1]
+  },
+  "Tennis": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1]
+  },
+  "Sailing": {
+    "double_period": true,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1, 3]
+  },
+  "High Ropes": {
+    "double_period": true,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1, 3]
+  },
+  "Program": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 1,
+    "preferred_periods": [1, 2, 3]
+  },
+  "Attendance": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 1,
+    "preferred_periods": [1, 2, 3]
+  },
+  "Fishing": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2, 3]
+  },
+  "Survival": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1, 3]
+  },
+  "Archery": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1]
+  },
+  "Volleyball": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1]
+  },
+  "Floor Hockey": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2]
+  },
+  "Arts & Crafts": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2]
+  },
+  "Office/Admin Help": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 1,
+    "preferred_periods": [2]
+  },
+  "DnD": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [1, 2]
+  },
+  "Dodgeball": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 3,
+    "preferred_periods": [2, 3]
+  },
+  "Snorkeling": {
+    "double_period": true,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2, 3]
+  },
+  "Diamond Sports": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2]
+  },
+  "Soccer": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [2]
+  },
+  "Leisure Sports": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [3]
+  },
+  "Skateboarding": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [3]
+  },
+  "BFS": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 2,
+    "preferred_periods": [3]
+  },
+  "Skull Session": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 1,
+    "preferred_periods": [3]
+  },
+  "Flag Football": {
+    "double_period": false,
+    "coordinators": [],
+    "staff_required": 3,
+    "preferred_periods": [3]
+  }
+}

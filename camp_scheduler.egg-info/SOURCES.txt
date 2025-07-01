@@ -1,0 +1,17 @@
+LICENSE
+README.md
+setup.py
+camp_scheduler/__init__.py
+camp_scheduler/scheduler.py
+camp_scheduler.egg-info/PKG-INFO
+camp_scheduler.egg-info/SOURCES.txt
+camp_scheduler.egg-info/dependency_links.txt
+camp_scheduler.egg-info/requires.txt
+camp_scheduler.egg-info/top_level.txt
+camp_scheduler/data/camper_choices.csv
+camp_scheduler/data/classes.json
+camp_scheduler/data/coordinators.json
+camp_scheduler/data/dates.json
+camp_scheduler/data/fixed_skills_off.json
+camp_scheduler/data/locations.json
+camp_scheduler/data/off_times_form.csv

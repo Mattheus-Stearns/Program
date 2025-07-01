@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: camp_scheduler
+Version: 0.1
+Requires-Python: >=3.6
+License-File: LICENSE
+Requires-Dist: pandas
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python

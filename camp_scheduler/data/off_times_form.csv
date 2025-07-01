@@ -1,0 +1,61 @@
+id,personal email,name,first option day,second option day,first option night,second option night,notes
+100,staff0@camp.org,Staff Member 0,05/07/2025,05/07/2025,05/07/2025,03/07/2025,Prefers early week
+101,staff1@camp.org,Staff Member 1,04/07/2025,03/07/2025,01/07/2025,01/07/2025,Prefers early week
+102,staff2@camp.org,Staff Member 2,02/07/2025,02/07/2025,03/07/2025,03/07/2025,
+103,staff3@camp.org,Staff Member 3,02/07/2025,05/07/2025,02/07/2025,01/07/2025,Prefers early week
+104,staff4@camp.org,Staff Member 4,01/07/2025,04/07/2025,02/07/2025,02/07/2025,Avoid Wednesdays
+105,staff5@camp.org,Staff Member 5,03/07/2025,04/07/2025,04/07/2025,03/07/2025,
+106,staff6@camp.org,Staff Member 6,02/07/2025,05/07/2025,04/07/2025,03/07/2025,
+107,staff7@camp.org,Staff Member 7,05/07/2025,05/07/2025,04/07/2025,04/07/2025,
+108,staff8@camp.org,Staff Member 8,04/07/2025,03/07/2025,05/07/2025,01/07/2025,Prefers early week
+109,staff9@camp.org,Staff Member 9,05/07/2025,02/07/2025,05/07/2025,03/07/2025,Prefers early week
+110,staff10@camp.org,Staff Member 10,01/07/2025,05/07/2025,04/07/2025,02/07/2025,
+111,staff11@camp.org,Staff Member 11,05/07/2025,04/07/2025,01/07/2025,04/07/2025,Avoid Wednesdays
+112,staff12@camp.org,Staff Member 12,03/07/2025,02/07/2025,03/07/2025,04/07/2025,
+113,staff13@camp.org,Staff Member 13,02/07/2025,05/07/2025,02/07/2025,01/07/2025,Prefers early week
+114,staff14@camp.org,Staff Member 14,02/07/2025,04/07/2025,04/07/2025,04/07/2025,Prefers early week
+115,staff15@camp.org,Staff Member 15,04/07/2025,02/07/2025,01/07/2025,05/07/2025,Prefers early week
+116,staff16@camp.org,Staff Member 16,03/07/2025,05/07/2025,05/07/2025,04/07/2025,
+117,staff17@camp.org,Staff Member 17,03/07/2025,04/07/2025,01/07/2025,01/07/2025,Avoid Wednesdays
+118,staff18@camp.org,Staff Member 18,04/07/2025,05/07/2025,03/07/2025,04/07/2025,Prefers early week
+119,staff19@camp.org,Staff Member 19,29/06/2025,30/06/2025,01/07/2025,01/07/2025,Prefers early week
+120,staff20@camp.org,Staff Member 20,29/06/2025,30/06/2025,01/07/2025,02/07/2025,Prefers early week
+121,staff21@camp.org,Staff Member 21,30/06/2025,03/07/2025,04/07/2025,03/07/2025,Prefers early week
+122,staff22@camp.org,Staff Member 22,30/06/2025,05/07/2025,05/07/2025,01/07/2025,Avoid Wednesdays
+123,staff23@camp.org,Staff Member 23,05/07/2025,04/07/2025,04/07/2025,02/07/2025,Prefers early week
+124,staff24@camp.org,Staff Member 24,03/07/2025,04/07/2025,02/07/2025,04/07/2025,
+125,staff25@camp.org,Staff Member 25,01/07/2025,04/07/2025,02/07/2025,03/07/2025,Avoid Wednesdays
+126,staff26@camp.org,Staff Member 26,01/07/2025,03/07/2025,01/07/2025,04/07/2025,
+127,staff27@camp.org,Staff Member 27,02/07/2025,04/07/2025,03/07/2025,01/07/2025,Prefers early week
+128,staff28@camp.org,Staff Member 28,01/07/2025,04/07/2025,05/07/2025,05/07/2025,
+129,staff29@camp.org,Staff Member 29,01/07/2025,05/07/2025,05/07/2025,05/07/2025,Avoid Wednesdays
+130,staff30@camp.org,Staff Member 30,04/07/2025,04/07/2025,02/07/2025,01/07/2025,Avoid Wednesdays
+131,staff31@camp.org,Staff Member 31,01/07/2025,01/07/2025,04/07/2025,05/07/2025,
+132,staff32@camp.org,Staff Member 32,04/07/2025,02/07/2025,04/07/2025,04/07/2025,
+133,staff33@camp.org,Staff Member 33,04/07/2025,02/07/2025,04/07/2025,04/07/2025,
+134,staff34@camp.org,Staff Member 34,04/07/2025,04/07/2025,01/07/2025,04/07/2025,Prefers early week
+135,staff35@camp.org,Staff Member 35,01/07/2025,02/07/2025,04/07/2025,03/07/2025,
+136,staff36@camp.org,Staff Member 36,01/07/2025,05/07/2025,05/07/2025,04/07/2025,Avoid Wednesdays
+137,staff37@camp.org,Staff Member 37,01/07/2025,03/07/2025,04/07/2025,01/07/2025,Prefers early week
+138,staff38@camp.org,Staff Member 38,04/07/2025,03/07/2025,02/07/2025,02/07/2025,
+139,staff39@camp.org,Staff Member 39,04/07/2025,04/07/2025,05/07/2025,05/07/2025,
+140,staff40@camp.org,Staff Member 40,04/07/2025,01/07/2025,05/07/2025,03/07/2025,
+141,staff41@camp.org,Staff Member 41,02/07/2025,04/07/2025,03/07/2025,02/07/2025,
+142,staff42@camp.org,Staff Member 42,04/07/2025,02/07/2025,05/07/2025,05/07/2025,Prefers early week
+143,staff43@camp.org,Staff Member 43,05/07/2025,05/07/2025,05/07/2025,03/07/2025,Prefers early week
+144,staff44@camp.org,Staff Member 44,05/07/2025,04/07/2025,05/07/2025,05/07/2025,Avoid Wednesdays
+145,staff45@camp.org,Staff Member 45,01/07/2025,04/07/2025,04/07/2025,01/07/2025,
+146,staff46@camp.org,Staff Member 46,04/07/2025,01/07/2025,03/07/2025,01/07/2025,Prefers early week
+147,staff47@camp.org,Staff Member 47,05/07/2025,04/07/2025,04/07/2025,02/07/2025,Prefers early week
+148,staff48@camp.org,Staff Member 48,02/07/2025,05/07/2025,02/07/2025,03/07/2025,Prefers early week
+149,staff49@camp.org,Staff Member 49,02/07/2025,02/07/2025,02/07/2025,05/07/2025,
+150,staff50@camp.org,Staff Member 50,01/07/2025,04/07/2025,02/07/2025,01/07/2025,Avoid Wednesdays
+151,staff51@camp.org,Staff Member 51,02/07/2025,04/07/2025,04/07/2025,03/07/2025,
+152,staff52@camp.org,Staff Member 52,05/07/2025,01/07/2025,01/07/2025,04/07/2025,Avoid Wednesdays
+153,staff53@camp.org,Staff Member 53,04/07/2025,01/07/2025,05/07/2025,04/07/2025,Avoid Wednesdays
+154,staff54@camp.org,Staff Member 54,01/07/2025,01/07/2025,04/07/2025,05/07/2025,Avoid Wednesdays
+155,staff55@camp.org,Staff Member 55,05/07/2025,02/07/2025,02/07/2025,05/07/2025,Prefers early week
+156,staff56@camp.org,Staff Member 56,03/07/2025,05/07/2025,01/07/2025,02/07/2025,Prefers early week
+157,staff57@camp.org,Staff Member 57,05/07/2025,01/07/2025,03/07/2025,05/07/2025,Avoid Wednesdays
+158,staff58@camp.org,Staff Member 58,02/07/2025,01/07/2025,01/07/2025,01/07/2025,Prefers early week
+159,staff59@camp.org,Staff Member 59,05/07/2025,04/07/2025,02/07/2025,03/07/2025,

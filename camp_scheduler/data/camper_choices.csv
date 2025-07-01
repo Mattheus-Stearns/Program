@@ -1,0 +1,151 @@
+id,name,cabin,class1,class2,class3,class4,class5
+1001,Camper 1,Eagles,Attendance,Program,High Ropes,Soccer,Floor Hockey
+1002,Camper 2,Foxes,Waterfront,Office/Admin Help,Tennis,Arts & Crafts,DnD
+1003,Camper 3,Cougars,BFS,Volleyball,High Ropes,Basketball,Snorkeling
+1004,Camper 4,Bears,Floor Hockey,Volleyball,Sailing,Skull Session,DnD
+1005,Camper 5,Cougars,Arts & Crafts,Sailing,Fishing,Snorkeling,Tennis
+1006,Camper 6,Falcons,Arts & Crafts,Sailing,DnD,Survival,Office/Admin Help
+1007,Camper 7,Eagles,DnD,Tennis,Attendance,Basketball,Archery
+1008,Camper 8,Hawks,Leisure Sports,High Ropes,Diamond Sports,Office/Admin Help,Arts & Crafts
+1009,Camper 9,Bears,Dodgeball,Floor Hockey,Fishing,Archery,Sailing
+1010,Camper 10,Foxes,Attendance,BFS,Sailing,Skull Session,Fishing
+1011,Camper 11,Bears,Survival,Arts & Crafts,Basketball,Attendance,Snorkeling
+1012,Camper 12,Foxes,Soccer,BFS,Program,DnD,Floor Hockey
+1013,Camper 13,Wolves,Office/Admin Help,Snorkeling,Basketball,Flag Football,Leisure Sports
+1014,Camper 14,Wolves,Program,Flag Football,High Ropes,Floor Hockey,Office/Admin Help
+1015,Camper 15,Wolves,Waterfront,Soccer,High Ropes,Program,Office/Admin Help
+1016,Camper 16,Bears,Basketball,Volleyball,Program,Tennis,Floor Hockey
+1017,Camper 17,Eagles,Floor Hockey,Waterfront,Diamond Sports,Soccer,Archery
+1018,Camper 18,Lynx,Flag Football,Survival,Soccer,Basketball,Tennis
+1019,Camper 19,Hawks,Soccer,Flag Football,Sailing,Leisure Sports,Volleyball
+1020,Camper 20,Owls,Dodgeball,Program,Volleyball,Soccer,Waterfront
+1021,Camper 21,Bears,BFS,Office/Admin Help,DnD,Program,Snorkeling
+1022,Camper 22,Hawks,Archery,Soccer,Volleyball,BFS,DnD
+1023,Camper 23,Foxes,Tennis,Dodgeball,Flag Football,Diamond Sports,Floor Hockey
+1024,Camper 24,Lynx,Fishing,DnD,Diamond Sports,Sailing,Dodgeball
+1025,Camper 25,Hawks,Flag Football,Waterfront,Skull Session,Office/Admin Help,Attendance
+1026,Camper 26,Falcons,Attendance,Program,High Ropes,Diamond Sports,Dodgeball
+1027,Camper 27,Cougars,Volleyball,Floor Hockey,Waterfront,Archery,Skateboarding
+1028,Camper 28,Lynx,Dodgeball,Archery,Skateboarding,Waterfront,Leisure Sports
+1029,Camper 29,Otters,Sailing,DnD,Soccer,Waterfront,Arts & Crafts
+1030,Camper 30,Eagles,Leisure Sports,Waterfront,Dodgeball,Fishing,BFS
+1031,Camper 31,Hawks,Sailing,Snorkeling,DnD,Waterfront,High Ropes
+1032,Camper 32,Hawks,Office/Admin Help,BFS,Volleyball,Program,Diamond Sports
+1033,Camper 33,Otters,Snorkeling,Sailing,Survival,Program,High Ropes
+1034,Camper 34,Bears,High Ropes,Dodgeball,Skateboarding,DnD,Tennis
+1035,Camper 35,Hawks,BFS,Survival,Floor Hockey,High Ropes,Volleyball
+1036,Camper 36,Otters,Survival,BFS,Diamond Sports,Floor Hockey,Volleyball
+1037,Camper 37,Otters,Sailing,BFS,Diamond Sports,Program,Dodgeball
+1038,Camper 38,Cougars,Office/Admin Help,Flag Football,Dodgeball,Waterfront,Floor Hockey
+1039,Camper 39,Foxes,Survival,Skull Session,Leisure Sports,Sailing,High Ropes
+1040,Camper 40,Falcons,Archery,BFS,Sailing,Soccer,Arts & Crafts
+1041,Camper 41,Wolves,High Ropes,Archery,Survival,Volleyball,Snorkeling
+1042,Camper 42,Cougars,Survival,Waterfront,Dodgeball,Soccer,Program
+1043,Camper 43,Foxes,Flag Football,Office/Admin Help,High Ropes,Survival,Skateboarding
+1044,Camper 44,Wolves,Office/Admin Help,Waterfront,Sailing,Arts & Crafts,Leisure Sports
+1045,Camper 45,Otters,Waterfront,Floor Hockey,Dodgeball,Snorkeling,Flag Football
+1046,Camper 46,Otters,BFS,Skateboarding,Snorkeling,Soccer,Sailing
+1047,Camper 47,Bears,Skateboarding,Diamond Sports,Leisure Sports,Skull Session,High Ropes
+1048,Camper 48,Wolves,Survival,Arts & Crafts,BFS,Diamond Sports,Floor Hockey
+1049,Camper 49,Otters,Diamond Sports,Floor Hockey,DnD,Leisure Sports,Fishing
+1050,Camper 50,Eagles,Basketball,High Ropes,DnD,Sailing,Skateboarding
+1051,Camper 51,Eagles,Survival,Skull Session,Floor Hockey,Diamond Sports,Tennis
+1052,Camper 52,Lynx,Basketball,Flag Football,Fishing,Sailing,Program
+1053,Camper 53,Cougars,High Ropes,Snorkeling,Soccer,Office/Admin Help,Attendance
+1054,Camper 54,Owls,Fishing,Skateboarding,Basketball,High Ropes,Waterfront
+1055,Camper 55,Lynx,Flag Football,DnD,Leisure Sports,Waterfront,Skull Session
+1056,Camper 56,Cougars,Tennis,Sailing,High Ropes,Waterfront,Floor Hockey
+1057,Camper 57,Lynx,Office/Admin Help,Diamond Sports,Waterfront,BFS,Tennis
+1058,Camper 58,Hawks,Floor Hockey,Basketball,Leisure Sports,Attendance,Snorkeling
+1059,Camper 59,Eagles,Survival,Skateboarding,High Ropes,Basketball,DnD
+1060,Camper 60,Falcons,Basketball,Arts & Crafts,Program,High Ropes,Dodgeball
+1061,Camper 61,Foxes,Basketball,Volleyball,Floor Hockey,Snorkeling,Archery
+1062,Camper 62,Falcons,Skateboarding,BFS,Attendance,Fishing,Sailing
+1063,Camper 63,Otters,Leisure Sports,Diamond Sports,Sailing,Basketball,Snorkeling
+1064,Camper 64,Bears,Dodgeball,Skull Session,Archery,DnD,Arts & Crafts
+1065,Camper 65,Eagles,Office/Admin Help,Snorkeling,Floor Hockey,Flag Football,Fishing
+1066,Camper 66,Hawks,Arts & Crafts,Skull Session,Program,Skateboarding,Fishing
+1067,Camper 67,Falcons,Sailing,Flag Football,Snorkeling,Soccer,Attendance
+1068,Camper 68,Falcons,Diamond Sports,Floor Hockey,Sailing,DnD,Soccer
+1069,Camper 69,Foxes,Dodgeball,Skateboarding,Arts & Crafts,Fishing,Waterfront
+1070,Camper 70,Lynx,Office/Admin Help,Sailing,Leisure Sports,Survival,Dodgeball
+1071,Camper 71,Falcons,BFS,Floor Hockey,Leisure Sports,DnD,High Ropes
+1072,Camper 72,Wolves,Office/Admin Help,Soccer,BFS,DnD,Diamond Sports
+1073,Camper 73,Wolves,Dodgeball,Sailing,Archery,Survival,Volleyball
+1074,Camper 74,Cougars,Survival,Snorkeling,Flag Football,Floor Hockey,Arts & Crafts
+1075,Camper 75,Wolves,Attendance,High Ropes,Soccer,Sailing,DnD
+1076,Camper 76,Hawks,Arts & Crafts,Attendance,Office/Admin Help,Snorkeling,Soccer
+1077,Camper 77,Lynx,Dodgeball,High Ropes,Program,Survival,Attendance
+1078,Camper 78,Foxes,Snorkeling,Sailing,Flag Football,Dodgeball,Fishing
+1079,Camper 79,Otters,Skateboarding,Floor Hockey,Arts & Crafts,BFS,Snorkeling
+1080,Camper 80,Hawks,Skateboarding,Soccer,Attendance,Volleyball,BFS
+1081,Camper 81,Bears,Waterfront,Skull Session,BFS,Volleyball,Survival
+1082,Camper 82,Hawks,High Ropes,Soccer,BFS,Program,Diamond Sports
+1083,Camper 83,Wolves,Skull Session,Office/Admin Help,Waterfront,Diamond Sports,DnD
+1084,Camper 84,Bears,Arts & Crafts,High Ropes,Waterfront,Office/Admin Help,Snorkeling
+1085,Camper 85,Foxes,Flag Football,Snorkeling,BFS,Leisure Sports,Archery
+1086,Camper 86,Lynx,Fishing,Arts & Crafts,Snorkeling,Diamond Sports,High Ropes
+1087,Camper 87,Bears,Sailing,Arts & Crafts,Waterfront,Volleyball,Archery
+1088,Camper 88,Hawks,Diamond Sports,Soccer,Volleyball,Tennis,Dodgeball
+1089,Camper 89,Cougars,Office/Admin Help,Basketball,Program,Arts & Crafts,Fishing
+1090,Camper 90,Lynx,Soccer,Tennis,DnD,Snorkeling,Program
+1091,Camper 91,Hawks,Skateboarding,BFS,Soccer,Office/Admin Help,Tennis
+1092,Camper 92,Bears,Arts & Crafts,Fishing,Program,Sailing,Tennis
+1093,Camper 93,Lynx,Waterfront,Skateboarding,Diamond Sports,Tennis,Floor Hockey
+1094,Camper 94,Eagles,Attendance,Archery,Basketball,Floor Hockey,Survival
+1095,Camper 95,Hawks,Floor Hockey,Basketball,Archery,Dodgeball,Sailing
+1096,Camper 96,Lynx,Leisure Sports,Soccer,High Ropes,BFS,Sailing
+1097,Camper 97,Owls,Volleyball,Fishing,Program,DnD,Flag Football
+1098,Camper 98,Wolves,Attendance,Diamond Sports,Flag Football,High Ropes,Archery
+1099,Camper 99,Otters,Skateboarding,Diamond Sports,Skull Session,Waterfront,Office/Admin Help
+1100,Camper 100,Otters,Basketball,Flag Football,Diamond Sports,Survival,Dodgeball
+1101,Camper 101,Foxes,Diamond Sports,BFS,Office/Admin Help,Survival,Soccer
+1102,Camper 102,Foxes,Arts & Crafts,BFS,Basketball,Volleyball,DnD
+1103,Camper 103,Lynx,Flag Football,High Ropes,Tennis,Attendance,Skateboarding
+1104,Camper 104,Cougars,DnD,Soccer,Office/Admin Help,Basketball,Diamond Sports
+1105,Camper 105,Cougars,Snorkeling,Attendance,DnD,Soccer,Leisure Sports
+1106,Camper 106,Eagles,High Ropes,Tennis,Floor Hockey,Flag Football,Soccer
+1107,Camper 107,Falcons,Volleyball,Survival,Skateboarding,Arts & Crafts,DnD
+1108,Camper 108,Falcons,Office/Admin Help,BFS,Survival,Sailing,High Ropes
+1109,Camper 109,Bears,Leisure Sports,Floor Hockey,Office/Admin Help,Skateboarding,Skull Session
+1110,Camper 110,Falcons,Waterfront,Attendance,Dodgeball,Archery,Basketball
+1111,Camper 111,Hawks,BFS,Fishing,Diamond Sports,Flag Football,Soccer
+1112,Camper 112,Cougars,Flag Football,Skateboarding,Attendance,Volleyball,Soccer
+1113,Camper 113,Cougars,Skateboarding,Waterfront,Tennis,Dodgeball,Floor Hockey
+1114,Camper 114,Hawks,Program,Survival,Dodgeball,Soccer,Waterfront
+1115,Camper 115,Eagles,Arts & Crafts,Survival,High Ropes,Sailing,Volleyball
+1116,Camper 116,Owls,Basketball,High Ropes,Dodgeball,Skateboarding,DnD
+1117,Camper 117,Foxes,Survival,Fishing,Volleyball,Office/Admin Help,Waterfront
+1118,Camper 118,Eagles,DnD,Waterfront,Dodgeball,Skateboarding,Diamond Sports
+1119,Camper 119,Foxes,Tennis,BFS,Soccer,High Ropes,Archery
+1120,Camper 120,Bears,Dodgeball,Leisure Sports,Sailing,Snorkeling,DnD
+1121,Camper 121,Otters,Sailing,Waterfront,Dodgeball,High Ropes,Basketball
+1122,Camper 122,Falcons,Archery,Waterfront,Volleyball,Tennis,Fishing
+1123,Camper 123,Cougars,Tennis,Archery,High Ropes,Soccer,Arts & Crafts
+1124,Camper 124,Wolves,Survival,Floor Hockey,Skateboarding,High Ropes,Flag Football
+1125,Camper 125,Wolves,Sailing,BFS,Leisure Sports,Attendance,DnD
+1126,Camper 126,Wolves,Flag Football,Attendance,Dodgeball,Program,Archery
+1127,Camper 127,Bears,Office/Admin Help,Snorkeling,Diamond Sports,Arts & Crafts,Basketball
+1128,Camper 128,Owls,Attendance,Skull Session,Snorkeling,Arts & Crafts,Office/Admin Help
+1129,Camper 129,Hawks,Archery,Diamond Sports,Arts & Crafts,Leisure Sports,BFS
+1130,Camper 130,Cougars,Dodgeball,Leisure Sports,DnD,Flag Football,Snorkeling
+1131,Camper 131,Wolves,Diamond Sports,Archery,Volleyball,Skateboarding,DnD
+1132,Camper 132,Owls,Dodgeball,Arts & Crafts,Archery,Leisure Sports,Flag Football
+1133,Camper 133,Hawks,Fishing,Program,Leisure Sports,Skateboarding,Waterfront
+1134,Camper 134,Cougars,High Ropes,Skull Session,Basketball,Skateboarding,Volleyball
+1135,Camper 135,Falcons,Soccer,Program,Diamond Sports,DnD,Archery
+1136,Camper 136,Eagles,Snorkeling,DnD,Office/Admin Help,Archery,Arts & Crafts
+1137,Camper 137,Falcons,Diamond Sports,BFS,Leisure Sports,Tennis,Fishing
+1138,Camper 138,Otters,Arts & Crafts,Volleyball,Waterfront,High Ropes,Snorkeling
+1139,Camper 139,Foxes,Office/Admin Help,Skull Session,Program,Waterfront,Archery
+1140,Camper 140,Bears,Skull Session,Fishing,Archery,Arts & Crafts,Attendance
+1141,Camper 141,Otters,Dodgeball,High Ropes,Sailing,Soccer,Snorkeling
+1142,Camper 142,Hawks,Leisure Sports,Tennis,Office/Admin Help,Attendance,Fishing
+1143,Camper 143,Otters,Program,High Ropes,Attendance,Soccer,BFS
+1144,Camper 144,Otters,Program,BFS,Skateboarding,Waterfront,Survival
+1145,Camper 145,Otters,Skull Session,Sailing,Arts & Crafts,Basketball,Fishing
+1146,Camper 146,Falcons,Skateboarding,Leisure Sports,DnD,Snorkeling,Fishing
+1147,Camper 147,Lynx,Leisure Sports,Diamond Sports,Office/Admin Help,Skateboarding,Dodgeball
+1148,Camper 148,Eagles,Basketball,Waterfront,Archery,Floor Hockey,Dodgeball
+1149,Camper 149,Wolves,DnD,Soccer,Archery,Leisure Sports,Office/Admin Help
+1150,Camper 150,Hawks,Basketball,Leisure Sports,Diamond Sports,Flag Football,Snorkeling
