@@ -1,3 +1,8 @@
+# TODO: Automatically assign time off if unassigned (is it )
+# TODO: Add one off period / max of two per skills class for staff
+# TODO: Maybe add to a web app?
+# TODO: Make sure id is connected end to end thru email across index and off_times_form
+# TODO: Make sure that campers get assigned to things that they are assigned to & getting assigned to unique skills classes
 import os
 import csv
 import random
@@ -30,8 +35,6 @@ class ProgramSchedules:
     def _get_data_path(self, filename):
         """Helper to get paths to data files"""
         return os.path.join(self.data_dir, filename)
-    
-    # ... rest of your class remains the same ...
 
     def _write_output(self, filename, content, mode='w'):
         """Helper to write output files directly to output directory"""
