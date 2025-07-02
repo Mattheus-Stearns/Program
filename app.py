@@ -24,7 +24,7 @@ def main():
         week_start_date = get_next_monday()
 
     scheduler = ProgramSchedules(week_start_date)
-    scheduler.assign_campers_to_skills()
+    scheduler.run_full_schedule()
 
 if __name__ == "__main__":
     main()
