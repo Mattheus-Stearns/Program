@@ -1,102 +1,143 @@
-# TODO: currently coordinators.json is just filled with random data, actually cross reference it with the actual index.csv file to ensure that the id's are correct and legit
-# TODO: Make an actual index.csv file
+import tkinter as tk
+from tkinter import filedialog, messagebox
 from datetime import datetime, timedelta
-from camp_scheduler.scheduler import ProgramSchedules
-import argparse
+import os
+import shutil
 import sys
+import subprocess
+
+# Import your scheduling logic
+from camp_scheduler.scheduler import ProgramSchedules
+
+# ---- Helper Functions ----
 
 def get_next_monday(today=None):
     today = today or datetime.today()
-    days_ahead = (7 - today.weekday()) % 7  # 0 = Monday
-    days_ahead = 7 if days_ahead == 0 else days_ahead  # force next week if today is Monday
-    next_monday = today + timedelta(days=days_ahead)
-    return next_monday.strftime("%d/%m/%Y")
+    days_ahead = (7 - today.weekday()) % 7
+    days_ahead = 7 if days_ahead == 0 else days_ahead
+    return (today + timedelta(days=days_ahead)).strftime("%d/%m/%Y")
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Abnaki Program Scheduler CLI",
-        formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument(
-        "--week-start", "-w",
-        help="Week start date in DD/MM/YYYY format. Default: next Monday."
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # Define subcommands
-    subparsers.add_parser("run-full-schedule", help="Run the full scheduling pipeline")
-    subparsers.add_parser("assign-off-times", help="Assign off times")
-    subparsers.add_parser("assign-freetime-locations", help="Assign freetime locations")
-    subparsers.add_parser("generate-coverage-schedule", help="Generate coverage schedule")
-    subparsers.add_parser("assign-skills-classes", help="Assign skills classes for staff")
-    subparsers.add_parser("assign-campers-to-skills", help="Assign campers to skills classes")
-
-    # For legacy compatibility, allow --run-full-schedule, etc.
-    parser.add_argument("--run-full-schedule", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--assign-off-times", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--assign-freetime-locations", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--generate-coverage-schedule", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--assign-skills-classes", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--assign-campers-to-skills", action="store_true", help=argparse.SUPPRESS)
-
-    # Custom help
-    parser.add_argument("help", nargs="?", help=argparse.SUPPRESS)
-
-    args = parser.parse_args()
-
-    # Show help if requested
-    if args.help == "help" or (len(sys.argv) == 2 and sys.argv[1] == "help"):
-        print("""
-Abnaki Program Scheduler CLI
-
-Usage:
-  python3 app.py [--week-start DD/MM/YYYY] <command>
-
-Commands:
-  run-full-schedule         Run the full scheduling pipeline (all steps)
-  assign-off-times          Assign off times to staff
-  assign-freetime-locations Assign freetime locations for staff
-  generate-coverage-schedule Generate the coverage schedule
-  assign-skills-classes     Assign skills classes for staff
-  assign-campers-to-skills  Assign campers to skills classes
-
-Examples:
-  python3 app.py run-full-schedule
-  python3 app.py --week-start 07/07/2025 assign-campers-to-skills
-
-You can also use legacy flags:
-  python3 app.py --run-full-schedule
-""")
-        sys.exit(0)
-
-    # Parse week start date
-    if args.week_start:
-        try:
-            week_start_date = datetime.strptime(args.week_start, "%d/%m/%Y").strftime("%d/%m/%Y")
-        except ValueError:
-            print("Error: Date must be in format DD/MM/YYYY")
-            sys.exit(1)
+def refresh_file_list():
+    file_listbox.delete(0, tk.END)
+    output_dir = os.path.join(os.getcwd(), "Output")
+    os.makedirs(output_dir, exist_ok=True)
+    files = sorted(os.listdir(output_dir))
+    if not files:
+        file_listbox.insert(tk.END, "(no files in /Output/)")
     else:
-        week_start_date = get_next_monday()
+        for f in files:
+            file_listbox.insert(tk.END, f)
 
-    scheduler = ProgramSchedules(week_start_date)
+def import_files():
+    file_paths = filedialog.askopenfilenames(
+        title="Select CSV Files to Import",
+        filetypes=[("CSV files", "*.csv")]
+    )
+    if file_paths:
+        dest_dir = os.path.join(os.getcwd(), "camp_scheduler/data")
+        os.makedirs(dest_dir, exist_ok=True)
+        for path in file_paths:
+            if path.lower().endswith(".csv"):
+                dest_path = os.path.join(dest_dir, os.path.basename(path))
+                shutil.copy(path, dest_path)
+        messagebox.showinfo("Success", f"Imported {len(file_paths)} file(s) to /data/")
+        refresh_file_list()
 
-    # Command dispatch
-    if args.command == "run-full-schedule" or args.run_full_schedule:
-        scheduler.run_full_schedule()
-    elif args.command == "assign-off-times" or args.assign_off_times:
-        scheduler.assign_off_times()
-    elif args.command == "assign-freetime-locations" or args.assign_freetime_locations:
-        scheduler.assign_freetime_locations()
-    elif args.command == "generate-coverage-schedule" or args.generate_coverage_schedule:
-        scheduler.generate_coverage_schedule()
-    elif args.command == "assign-skills-classes" or args.assign_skills_classes:
-        scheduler.assign_skills_classes()
-    elif args.command == "assign-campers-to-skills" or args.assign_campers_to_skills:
-        scheduler.assign_campers_to_skills()
-    else:
-        parser.print_help()
+def run_command(command):
+    week_start = week_start_var.get().strip()
+    try:
+        if week_start:
+            datetime.strptime(week_start, "%d/%m/%Y")
+        else:
+            week_start = get_next_monday()
+    except ValueError:
+        messagebox.showerror("Invalid Date", "Please use DD/MM/YYYY format.")
+        return
 
-if __name__ == "__main__":
-    main()
+    scheduler = ProgramSchedules(week_start)
+
+    try:
+        if command == "run-full-schedule":
+            scheduler.run_full_schedule()
+        elif command == "assign-off-times":
+            scheduler.assign_off_times()
+        elif command == "assign-freetime-locations":
+            scheduler.assign_freetime_locations()
+        elif command == "generate-coverage-schedule":
+            scheduler.generate_coverage_schedule()
+        elif command == "assign-skills-classes":
+            scheduler.assign_skills_classes()
+        elif command == "assign-campers-to-skills":
+            scheduler.assign_campers_to_skills()
+        else:
+            messagebox.showwarning("Unknown Command", f"Unknown command: {command}")
+            return
+
+        messagebox.showinfo("Success", f"Command '{command}' executed successfully!")
+        refresh_file_list()
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred:\n{e}")
+
+# ---- GUI Setup ----
+
+root = tk.Tk()
+root.title("Abnaki Program Scheduler")
+
+# Week Start Input
+tk.Label(root, text="Week Start (DD/MM/YYYY):").grid(row=0, column=0, padx=10, pady=5, sticky="w")
+week_start_var = tk.StringVar(value=get_next_monday())
+tk.Entry(root, textvariable=week_start_var, width=20).grid(row=0, column=1, padx=10, pady=5, sticky="w")
+
+# Command Buttons
+commands = [
+    ("Run Full Schedule", "run-full-schedule"),
+    ("Assign Off Times", "assign-off-times"),
+    ("Assign Freetime Locations", "assign-freetime-locations"),
+    ("Generate Coverage Schedule", "generate-coverage-schedule"),
+    ("Assign Skills Classes", "assign-skills-classes"),
+    ("Assign Campers to Skills", "assign-campers-to-skills"),
+]
+
+for i, (label, cmd) in enumerate(commands, start=1):
+    tk.Button(root, text=label, width=30, command=lambda c=cmd: run_command(c)).grid(
+        row=i, column=0, columnspan=2, padx=10, pady=2
+    )
+
+# Import File Button
+tk.Button(root, text="Import CSV File(s) to /data/", command=import_files, width=30).grid(
+    row=len(commands)+1, column=0, columnspan=2, pady=10
+)
+
+# File List Display
+tk.Label(root, text="Output Folders:").grid(row=len(commands)+2, column=0, columnspan=2, sticky="w", padx=10)
+file_listbox = tk.Listbox(root, width=50, height=10)
+file_listbox.grid(row=len(commands)+3, column=0, columnspan=2, padx=10, pady=5)
+
+def open_selected_file(event):
+    selection = file_listbox.curselection()
+    if not selection:
+        return
+    filename = file_listbox.get(selection[0])
+    if filename == "(no files in /Output/)":
+        return
+    filepath = os.path.join(os.getcwd(), "Output", filename)
+    if not os.path.exists(filepath):
+        messagebox.showerror("File Not Found", f"File does not exist:\n{filepath}")
+        return
+
+    try:
+        if sys.platform == "win32":
+            os.startfile(filepath)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", filepath])
+        else:
+            subprocess.run(["xdg-open", filepath])
+    except Exception as e:
+        messagebox.showerror("Error", f"Could not open file:\n{e}")
+
+# Bind double-click event
+file_listbox.bind("<Double-Button-1>", open_selected_file)
+
+refresh_file_list()
+root.mainloop()
