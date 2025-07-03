@@ -3,144 +3,168 @@
     "double_period": false,
     "coordinators": [],
     "staff_required": 4,
-    "preferred_periods": [1, 2, 3]
+    "preferred_periods": [1, 2, 3],
+    "camper_assignable": false
   },
   "Basketball": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1]
+    "preferred_periods": [1, 2],
+    "camper_assignable": true
   },
   "Tennis": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1]
+    "preferred_periods": [1],
+    "camper_assignable": true
   },
   "Sailing": {
     "double_period": true,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1, 3]
+    "preferred_periods": [1, 3],
+    "camper_assignable": true
   },
   "High Ropes": {
     "double_period": true,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1, 3]
+    "preferred_periods": [1],
+    "camper_assignable": true
   },
   "Program": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 1,
-    "preferred_periods": [1, 2, 3]
+    "preferred_periods": [1, 2, 3],
+    "camper_assignable": false
   },
   "Attendance": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 1,
-    "preferred_periods": [1, 2, 3]
+    "preferred_periods": [1, 2, 3],
+    "camper_assignable": false
   },
   "Fishing": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2, 3]
+    "preferred_periods": [1, 2, 3],
+    "camper_assignable": true
   },
   "Survival": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1, 3]
+    "preferred_periods": [1, 3],
+    "camper_assignable": true
   },
   "Archery": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1]
+    "preferred_periods": [1],
+    "camper_assignable": true
   },
   "Volleyball": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1]
+    "preferred_periods": [1],
+    "camper_assignable": true
   },
   "Floor Hockey": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2]
+    "preferred_periods": [2],
+    "camper_assignable": true
   },
   "Arts & Crafts": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2]
+    "preferred_periods": [2],
+    "camper_assignable": true
   },
   "Office/Admin Help": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 1,
-    "preferred_periods": [2]
+    "preferred_periods": [2],
+    "camper_assignable": false
   },
   "DnD": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [1, 2]
+    "preferred_periods": [1, 2],
+    "camper_assignable": true
   },
   "Dodgeball": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 3,
-    "preferred_periods": [2, 3]
+    "preferred_periods": [2, 3],
+    "camper_assignable": true
   },
   "Snorkeling": {
-    "double_period": true,
+    "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2, 3]
+    "preferred_periods": [1, 2, 3],
+    "camper_assignable": true
   },
   "Diamond Sports": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2]
+    "preferred_periods": [1, 2],
+    "camper_assignable": true
   },
   "Soccer": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [2]
+    "preferred_periods": [1, 2],
+    "camper_assignable": true
   },
   "Leisure Sports": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [3]
+    "preferred_periods": [3],
+    "camper_assignable": true
   },
   "Skateboarding": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [3]
+    "preferred_periods": [3],
+    "camper_assignable": true
   },
   "BFS": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 2,
-    "preferred_periods": [3]
+    "preferred_periods": [3],
+    "camper_assignable": true
   },
   "Skull Session": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 1,
-    "preferred_periods": [3]
+    "preferred_periods": [3],
+    "camper_assignable": false
   },
   "Flag Football": {
     "double_period": false,
     "coordinators": [],
     "staff_required": 3,
-    "preferred_periods": [3]
+    "preferred_periods": [3],
+    "camper_assignable": true
   }
 }

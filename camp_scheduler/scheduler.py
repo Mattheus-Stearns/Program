@@ -1,6 +1,3 @@
-# TODO: Handle double periods starting P3 affecting freetime coverage
-# TODO: Make sure id is connected end to end thru email across index and off_times_form
-# TODO: Make sure that campers get assigned to things that they are assigned to & getting assigned to unique skills classes
 import os
 import csv
 import random
@@ -63,6 +60,27 @@ class ProgramSchedules:
         except:
             return False
 
+    def map_emails_to_ids_in_off_requests(self, off_requests):
+        """
+        Replaces 'id' in off_requests using 'personal email' by matching it to self.index_data.
+
+        Modifies each request in-place. If a match is not found, leaves 'id' as None and logs a warning.
+        """
+        email_to_id = {}
+        for staff_id, row in self.index_data.items():
+            email = row.get("personal email", "").strip().lower()
+            if email:
+                email_to_id[email] = staff_id
+
+        for request in off_requests:
+            email = request.get("personal email", "").strip().lower()
+            matched_id = email_to_id.get(email)
+            if matched_id:
+                request["id"] = matched_id
+            else:
+                print(f"[WARN] No match found for email: {email}")
+                request["id"] = None  # Prevent assigning
+
     def assign_off_times(self):
         try:
             # Load configuration files
@@ -72,6 +90,8 @@ class ProgramSchedules:
                 off_requests = list(csv.DictReader(f))
             with open(self.index_path) as f:
                 self.index_data = {row['id']: row for row in csv.DictReader(f)}
+
+            self.map_emails_to_ids_in_off_requests(off_requests)
 
             # Process blackout periods with 1-day buffer
             blackout_days = set()
@@ -633,6 +653,7 @@ class ProgramSchedules:
         print(f"Coverage skills classes schedule saved to {coverage_path}")
 
     def assign_campers_to_skills(self):
+
         # Load class configurations from package data directory
         with open(self._get_data_path("classes.json")) as f:
             class_configs = json.load(f)
@@ -644,13 +665,20 @@ class ProgramSchedules:
             for row in reader:
                 campers.append(row)
 
+        # Sort campers by submission_time (earlier submissions first)
+        campers.sort(key=lambda x: x.get("submission_time", "9999-12-31T23:59:59"))
+
         # Build demand list with weights
         class_demand = defaultdict(list)  # class -> list of (weight, camper_id, camper_data)
         for camper in campers:
             for i in range(1, 6):
                 choice = camper[f'class{i}']
-                if choice:
+                if choice and choice in class_configs:
                     class_demand[choice].append((i, camper['id'], camper))
+                elif choice and choice not in class_configs:
+                    camper.setdefault('_unassign_reasons', {}).setdefault('global', []).append(
+                        f"Choice {choice} not in class_configs"
+                    )
 
         # Sort demand FIFO style with preference weighting
         for class_name in class_demand:
@@ -659,11 +687,13 @@ class ProgramSchedules:
         # Assignments and tracking
         camper_assignments = defaultdict(dict)  # camper_id -> period -> class
         class_rosters = defaultdict(lambda: defaultdict(list))  # class -> period -> list of camper ids
-        unassignable_campers = []
         inactive_classes = set()
+        camper_periods = defaultdict(set)  # camper_id -> set of assigned periods
+        unassign_reasons = defaultdict(lambda: defaultdict(list))  # camper_id -> period -> list of reasons
 
-        # Track assigned periods per camper
-        camper_periods = defaultdict(set)
+        # Helper: Check if camper already has this class (single or double)
+        def camper_has_class(camper_id, class_name):
+            return class_name in camper_assignments[camper_id].values()
 
         # First pass: assign up to 3 periods
         for priority in range(1, 6):
@@ -675,117 +705,314 @@ class ProgramSchedules:
                 for weight, camper_id, camper in demand_list:
                     if weight != priority:
                         continue
-                    if camper_id in camper_assignments and len(camper_assignments[camper_id]) >= 3:
+                    if len(camper_assignments[camper_id]) >= 3:
                         continue
 
-                    # Find a compatible period
                     assigned = False
                     for p in sorted(preferred_periods):
+                        if camper_has_class(camper_id, class_name):
+                            unassign_reasons[camper_id][p].append(
+                                f"Already assigned to {class_name} in another period"
+                            )
+                            continue
+                        staff_count = config.get("staff_required", 1)
+                        camper_limit = 8 * staff_count
+
+                        if len(class_rosters[class_name][p]) >= camper_limit:
+                            unassign_reasons[camper_id][p].append(
+                                f"Class {class_name} full in period {p}"
+                            )
+                            continue
+
                         if is_double:
                             if p == 3:
-                                if 3 not in camper_periods[camper_id]:
-                                    camper_assignments[camper_id][p] = class_name
+                                if 3 not in camper_periods[camper_id] and 3 not in camper_assignments[camper_id]:
+                                    # Assign only P3 (since only P3 is possible for a double in P3)
+                                    camper_assignments[camper_id][3] = class_name
                                     camper_periods[camper_id].add(3)
-                                    class_rosters[class_name][p].append(camper_id)
+                                    class_rosters[class_name][3].append(camper_id)
                                     assigned = True
                                     break
+                                else:
+                                    unassign_reasons[camper_id][3].append(
+                                        f"Double-period {class_name} needs P3, but already assigned in P3"
+                                    )
                             elif p in [1, 2]:
-                                if p not in camper_periods[camper_id] and (p + 1) not in camper_periods[camper_id]:
+                                # Assign both p and p+1, must not be assigned in either
+                                if (p not in camper_periods[camper_id] and
+                                    (p + 1) not in camper_periods[camper_id] and
+                                    p not in camper_assignments[camper_id] and
+                                    (p + 1) not in camper_assignments[camper_id]):
+                                    if len(class_rosters[class_name][p]) >= camper_limit:
+                                        unassign_reasons[camper_id][p].append(
+                                            f"Class {class_name} full in period {p} (double-period)"
+                                        )
+                                        continue
+                                    # Assign to both periods
                                     camper_assignments[camper_id][p] = class_name
                                     camper_assignments[camper_id][p + 1] = class_name
                                     camper_periods[camper_id].add(p)
                                     camper_periods[camper_id].add(p + 1)
                                     class_rosters[class_name][p].append(camper_id)
+                                    class_rosters[class_name][p + 1].append(camper_id)
                                     assigned = True
                                     break
+                                else:
+                                    unassign_reasons[camper_id][p].append(
+                                        f"Double-period {class_name} needs P{p} and P{p+1}, but already assigned in one"
+                                    )
                         else:
-                            if p not in camper_periods[camper_id]:
+                            if p not in camper_periods[camper_id] and p not in camper_assignments[camper_id]:
                                 camper_assignments[camper_id][p] = class_name
                                 camper_periods[camper_id].add(p)
                                 class_rosters[class_name][p].append(camper_id)
                                 assigned = True
                                 break
+                            else:
+                                unassign_reasons[camper_id][p].append(
+                                    f"Already assigned in period {p}"
+                                )
                     if assigned and len(camper_assignments[camper_id]) >= 3:
                         break
+
+        # Enforce camper limit: 8 campers per staff
+        for class_name, period_map in class_rosters.items():
+            for period, camper_list in period_map.items():
+                config = class_configs[class_name]
+                staff_count = config.get("staff_required", 1)
+                camper_limit = 8 * staff_count
+                if len(camper_list) > camper_limit:
+                    overfill = camper_list[camper_limit:]
+                    class_rosters[class_name][period] = camper_list[:camper_limit]
+                    for camper_id in overfill:
+                        del camper_assignments[camper_id][period]
+                        camper_periods[camper_id].discard(period)
+                        unassign_reasons[camper_id][period].append(
+                            f"Removed from {class_name} in period {period} due to overfill"
+                        )
 
         # Identify underfilled classes
         for class_name, period_map in class_rosters.items():
             for period, roster in period_map.items():
                 staff_count = class_configs[class_name]["staff_required"]
-                if len(roster) < 4 * staff_count:
+                if len(roster) < 3 * staff_count:
                     inactive_classes.add((class_name, period))
 
-        # Reassign campers from inactive classes
+        # Remove inactive class assignments
         for camper in campers:
             camper_id = camper['id']
-            periods_to_remove = []
-            for period, cname in camper_assignments[camper_id].items():
-                if (cname, period) in inactive_classes:
-                    periods_to_remove.append(period)
-            for period in periods_to_remove:
-                del camper_assignments[camper_id][period]
-                camper_periods[camper_id].discard(period)
+            periods_to_remove = [p for p, cname in camper_assignments[camper_id].items() if (cname, p) in inactive_classes]
+            for p in periods_to_remove:
+                cname = camper_assignments[camper_id][p]
+                del camper_assignments[camper_id][p]
+                camper_periods[camper_id].discard(p)
+                unassign_reasons[camper_id][p].append(
+                    f"Class {cname} in period {p} went inactive (underfilled)"
+                )
 
-        # Try to refill missing periods for affected campers
+        # Refill with preferred classes
         for camper in campers:
             camper_id = camper['id']
             if len(camper_assignments[camper_id]) >= 3:
                 continue
+
             for i in range(1, 6):
                 cname = camper[f'class{i}']
                 config = class_configs.get(cname, {})
                 if not config:
+                    unassign_reasons[camper_id]['global'].append(
+                        f"Class {cname} not in config"
+                    )
                     continue
                 preferred_periods = config.get("preferred_periods", [])
                 is_double = config.get("double_period", False)
+                staff_count = config.get("staff_required", 1)
+                camper_limit = 8 * staff_count
 
                 for p in sorted(preferred_periods):
+                    if camper_has_class(camper_id, cname):
+                        unassign_reasons[camper_id][p].append(
+                            f"Already assigned to {cname} elsewhere"
+                        )
+                        continue
                     if is_double:
-                        if p == 3 and 3 not in camper_periods[camper_id]:
-                            camper_assignments[camper_id][p] = cname
+                        if p == 3 and 3 not in camper_periods[camper_id] and 3 not in camper_assignments[camper_id] and len(class_rosters[cname][3]) < camper_limit:
+                            camper_assignments[camper_id][3] = cname
                             camper_periods[camper_id].add(3)
-                            class_rosters[cname][p].append(camper_id)
-                        elif p in [1, 2] and p not in camper_periods[camper_id] and (p + 1) not in camper_periods[camper_id]:
+                            class_rosters[cname][3].append(camper_id)
+                        elif p in [1, 2] and p not in camper_periods[camper_id] and (p + 1) not in camper_periods[camper_id] and p not in camper_assignments[camper_id] and (p + 1) not in camper_assignments[camper_id] and len(class_rosters[cname][p]) < camper_limit:
                             camper_assignments[camper_id][p] = cname
                             camper_assignments[camper_id][p + 1] = cname
-                            camper_periods[camper_id].add(p)
-                            camper_periods[camper_id].add(p + 1)
+                            camper_periods[camper_id].update([p, p + 1])
                             class_rosters[cname][p].append(camper_id)
+                            class_rosters[cname][p + 1].append(camper_id)
+                        else:
+                            unassign_reasons[camper_id][p].append(
+                                f"Double-period {cname} not assignable in period {p} (conflict or full)"
+                            )
                     else:
-                        if p not in camper_periods[camper_id]:
+                        if p not in camper_periods[camper_id] and p not in camper_assignments[camper_id] and len(class_rosters[cname][p]) < camper_limit:
                             camper_assignments[camper_id][p] = cname
                             camper_periods[camper_id].add(p)
                             class_rosters[cname][p].append(camper_id)
+                        else:
+                            unassign_reasons[camper_id][p].append(
+                                f"Class {cname} not assignable in period {p} (conflict or full)"
+                            )
                     if len(camper_assignments[camper_id]) >= 3:
                         break
                 if len(camper_assignments[camper_id]) >= 3:
                     break
 
-            if len(camper_assignments[camper_id]) == 0:
-                unassignable_campers.append(camper_id)
+        # FINAL assignment pass: assign any camper with missing periods to ANY open class
+        for camper in campers:
+            camper_id = camper['id']
+            if len(camper_assignments[camper_id]) >= 3:
+                continue
+            for p in [1, 2, 3]:
+                if p in camper_assignments[camper_id]:
+                    continue
+                assigned = False
+                for cname, config in class_configs.items():
+                    if not config.get("camper_assignable", True):
+                        unassign_reasons[camper_id][p].append(
+                            f"Class {cname} not camper-assignable"
+                        )
+                        continue
+                    if camper_has_class(camper_id, cname):
+                        unassign_reasons[camper_id][p].append(
+                            f"Already assigned to {cname} elsewhere"
+                        )
+                        continue
+                    if p not in config.get("preferred_periods", []):
+                        unassign_reasons[camper_id][p].append(
+                            f"Class {cname} not offered in period {p}"
+                        )
+                        continue
+                    staff_count = config.get("staff_required", 1)
+                    camper_limit = 8 * staff_count
+                    if len(class_rosters[cname][p]) >= camper_limit:
+                        unassign_reasons[camper_id][p].append(
+                            f"Class {cname} full in period {p}"
+                        )
+                        continue
+                    is_double = config.get("double_period", False)
+                    if is_double:
+                        if p in [1, 2] and p not in camper_periods[camper_id] and (p + 1) not in camper_periods[camper_id] and p not in camper_assignments[camper_id] and (p + 1) not in camper_assignments[camper_id]:
+                            camper_assignments[camper_id][p] = cname
+                            camper_assignments[camper_id][p + 1] = cname
+                            camper_periods[camper_id].update([p, p + 1])
+                            class_rosters[cname][p].append(camper_id)
+                            class_rosters[cname][p + 1].append(camper_id)
+                            assigned = True
+                            break
+                        elif p == 3 and 3 not in camper_periods[camper_id] and 3 not in camper_assignments[camper_id]:
+                            camper_assignments[camper_id][p] = cname
+                            camper_periods[camper_id].add(p)
+                            class_rosters[cname][p].append(camper_id)
+                            assigned = True
+                            break
+                        else:
+                            unassign_reasons[camper_id][p].append(
+                                f"Double-period {cname} not assignable in period {p} (conflict or full)"
+                            )
+                    else:
+                        if p not in camper_periods[camper_id] and p not in camper_assignments[camper_id]:
+                            camper_assignments[camper_id][p] = cname
+                            camper_periods[camper_id].add(p)
+                            class_rosters[cname][p].append(camper_id)
+                            assigned = True
+                            break
+                if not assigned:
+                    unassign_reasons[camper_id][p].append(
+                        f"No available class for period {p}"
+                    )
+        # === Update staff schedule for inactive classes ===
 
-        # Prepare camper assignments output
+        # Load existing staff schedule
+        staff_schedule_path = os.path.join(self.output_dir, "skills_schedule.csv")
+        staff_assignments = []
+        with open(staff_schedule_path, newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                staff_assignments.append(row)
+
+        period_map = {1: "P1", 2: "P2", 3: "P3"}
+        for row in staff_assignments:
+            for p in [1, 2, 3]:
+                col = period_map[p]
+                class_name = row[col]
+                if (class_name, p) in inactive_classes:
+                    row[col] = "OFF"  # Or "" for blank
+
+        # Write updated schedule
+        header = ["id", "name", "P1", "P2", "P3"]
+        skills_schedule_output = [header]
+        for row in staff_assignments:
+            skills_schedule_output.append([row["id"], row["name"], row["P1"], row["P2"], row["P3"]])
+
+        skills_schedule_path = self._write_output("skills_schedule.csv", skills_schedule_output)
+
+
+
+        # Output final camper assignments
         camper_output = [["id", "P1", "P2", "P3"]]
         for camper in campers:
             cid = camper['id']
             row = [cid]
             for p in [1, 2, 3]:
-                row.append(camper_assignments[cid].get(p, "Unassigned"))
+                row.append(camper_assignments[cid].get(p, ""))
             camper_output.append(row)
 
-        # Write outputs directly
+        # Output inactive classes
+        inactive_output = [["Class", "Period"]] + [[cname, p] for cname, p in inactive_classes]
+
+        # Output unassigned campers with reason
+        unassignable_output = [["id", "Missing Periods", "Reasons"]]
+        for camper in campers:
+            camper_id = camper['id']
+            assigned = camper_assignments[camper_id]
+            missing = []
+            for p in [1, 2, 3]:
+                covered = False
+                if p in assigned:
+                    covered = True
+                else:
+                    for check_p in [p-1, p]:
+                        if check_p in assigned:
+                            cname = assigned[check_p]
+                            config = class_configs.get(cname, {})
+                            if config.get("double_period", False):
+                                if (check_p == p - 1 and p in [2, 3]) or (check_p == p):
+                                    covered = True
+                                    break
+                if not covered:
+                    missing.append(str(p))
+            if missing:
+                reasons = []
+                for p in missing:
+                    reason_list = unassign_reasons[camper_id][int(p)]
+                    if not reason_list:
+                        reason_list = ["No available class for this period"]
+                    reasons.append(f"P{p}: {'; '.join(reason_list)}")
+                global_reasons = unassign_reasons[camper_id].get('global', [])
+                if global_reasons:
+                    reasons.append("Global: " + "; ".join(global_reasons))
+                unassignable_output.append([camper_id, ", ".join(missing), " | ".join(reasons)])
+
         camper_path = self._write_output("camper_assignments.csv", camper_output)
-        inactive_path = self._write_output("skills_not_run.csv", 
-            [["Class", "Period"]] + [[cname, p] for cname, p in inactive_classes])
-        unassignable_path = self._write_output("camper_unassigned_log.csv", 
-            [["id"]] + [[cid] for cid in unassignable_campers])
+        inactive_path = self._write_output("skills_not_run.csv", inactive_output)
+        unassignable_path = self._write_output("camper_unassigned_log.csv", unassignable_output)
 
         print(f"Camper skill assignments saved to {camper_path}")
         print(f"Inactive Classes saved to {inactive_path}")
         print(f"Unassignable Campers saved to {unassignable_path}")
 
     def export_output_summary(self):
-        """Create a summary log of all outputs (now just collects info since files are already written)"""
+        """Create a summary log of all outputs, including period capacity info."""
+        import os, csv, json
+        from collections import defaultdict
+
         log_summary = ["== Summary Log =="]
         log_summary.append(f"Timestamp: {self.timestamp}\n")
 
@@ -816,12 +1043,68 @@ class ProgramSchedules:
             else:
                 log_summary.append(f"⚠️ Missing file: {filename}")
 
+        # == Period capacity summary ==
+        try:
+            with open(self._get_data_path("classes.json")) as f:
+                class_configs = json.load(f)
+            # Load inactive classes
+            inactive_classes = set()
+            skills_not_run_path = os.path.join(self.output_dir, "skills_not_run.csv")
+            if os.path.exists(skills_not_run_path):
+                with open(skills_not_run_path, newline='') as f:
+                    reader = csv.reader(f)
+                    next(reader, None)  # skip header
+                    for row in reader:
+                        if len(row) >= 2:
+                            inactive_classes.add((row[0], int(row[1])))
+            # Load class_rosters from camper_assignments.csv
+            class_rosters = defaultdict(lambda: defaultdict(list))
+            assignments_path = os.path.join(self.output_dir, "camper_assignments.csv")
+            if os.path.exists(assignments_path):
+                with open(assignments_path, newline='') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        for p in [1, 2, 3]:
+                            cname = row.get(f"P{p}", "")
+                            if cname:
+                                class_rosters[cname][p].append(row["id"])
+        except Exception as e:
+            log_summary.append(f"⚠️ Could not load class config or rosters: {e}")
+            class_configs = {}
+            class_rosters = {}
+            inactive_classes = set()
+
+        for p in [1, 2, 3]:
+            assignable_classes = []
+            full_or_inactive_classes = []
+            for cname, config in class_configs.items():
+                if not config.get("camper_assignable", True):
+                    continue
+                if p not in config.get("preferred_periods", []):
+                    continue
+                if (cname, p) in inactive_classes:
+                    full_or_inactive_classes.append(cname)
+                    continue
+                staff_count = config.get("staff_required", 1)
+                camper_limit = 8 * staff_count
+                roster = class_rosters.get(cname, {}).get(p, [])
+                if len(roster) >= camper_limit:
+                    full_or_inactive_classes.append(cname)
+                    continue
+                assignable_classes.append(cname)
+            if not assignable_classes:
+                log_summary.append(f"⚠️ Period {p}: NO CAPACITY for any more campers (all assignable classes full or inactive)")
+            else:
+                log_summary.append(f"Period {p}: Capacity available in {', '.join(assignable_classes)}")
+
         # Write the summary log
         log_path = os.path.join(self.output_dir, "log.txt")
         with open(log_path, "w") as log_file:
             log_file.write("\n".join(log_summary))
 
         print(f"✅ Summary log created at {log_path}")
+
+
 
     def run_full_schedule(self):
         print("Starting scheduling process...")
