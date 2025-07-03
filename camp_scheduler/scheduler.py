@@ -120,20 +120,6 @@ class ProgramSchedules:
                 co_staff_assignments = staff_assignments.get(coverage_id, {})
                 return co_staff_assignments.get(time_type) == date_str
 
-            def has_cabin_conflict(staff_id, date_str):
-                """New: Prevent any same-date off within cabin (day or night)"""
-                department = self.index_data.get(staff_id, {}).get("department", "")
-                if not department or department in ["Program", "Admin", "Maintenance"]:
-                    return False  # Skip non-cabin staff
-                
-                for mate_id, mate_data in self.index_data.items():
-                    if (mate_id != staff_id and 
-                        mate_data.get("department") == department and
-                        (staff_assignments.get(mate_id, {}).get("day") == date_str or
-                        staff_assignments.get(mate_id, {}).get("night") == date_str)):
-                        return True
-                return False
-
             # Initialize tracking
             assignments = []
             unassigned_log = []
@@ -163,8 +149,7 @@ class ProgramSchedules:
                 for option in day_options:
                     if (is_valid_date(option) and
                         len(used_days[option]) < max_per_slot and
-                        not has_coverage_conflict(person_id, option, 'day') and
-                        not has_cabin_conflict(person_id, option)):  # New check
+                        not has_coverage_conflict(person_id, option, 'day')):  # New check
                         assignment['day_off'] = option
                         assignment['assignment_type'] = 'Preferred'
                         used_days[option].add(person_id)
@@ -177,7 +162,6 @@ class ProgramSchedules:
                     if (is_valid_date(option) and
                         len(used_nights[option]) < max_per_slot and
                         not has_coverage_conflict(person_id, option, 'night') and
-                        not has_cabin_conflict(person_id, option) and  # New check
                         not (assignment['day_off'] != "Unassigned" and 
                             self._is_consecutive(assignment['day_off'], option))):
                         assignment['night_off'] = option
@@ -197,8 +181,7 @@ class ProgramSchedules:
                     available_days = [
                         d for d in valid_dates 
                         if (len(used_days[d]) < max_per_slot and
-                            not has_coverage_conflict(person_id, d, 'day') and
-                            not has_cabin_conflict(person_id, d))
+                            not has_coverage_conflict(person_id, d, 'day'))
                     ]
                     if available_days:
                         day_off = random.choice(available_days)
@@ -212,7 +195,6 @@ class ProgramSchedules:
                         d for d in valid_dates 
                         if (len(used_nights[d]) < max_per_slot and
                             not has_coverage_conflict(person_id, d, 'night') and
-                            not has_cabin_conflict(person_id, d) and
                             not (assignment['day_off'] != "Unassigned" and 
                                 self._is_consecutive(assignment['day_off'], d)))
                     ]
@@ -1103,8 +1085,6 @@ class ProgramSchedules:
             log_file.write("\n".join(log_summary))
 
         print(f"✅ Summary log created at {log_path}")
-
-
 
     def run_full_schedule(self):
         print("Starting scheduling process...")
