@@ -1000,15 +1000,15 @@ class ProgramSchedules:
 
         # Check output files and gather stats
         output_files = {
-            "time_off_results.csv": "✅ Day off assignments exported",
-            "time_off_unassigned.csv": "⛔ Day off unassigned entries",
-            "freetime_schedule.csv": "✅ Freetime schedule exported",
-            "skills_schedule.csv": "✅ Skills schedule exported",
-            "skills_unassigned.csv": "⛔ Skills unassigned entries",
-            "coverage_schedule.csv": "✅ Coverage schedule exported",
-            "camper_assignments.csv": "✅ Camper assignments exported",
-            "skills_not_run.csv": "🚫 Skills not run",
-            "camper_unassigned_log.csv": "😬 Campers not fully assigned"
+            "time_off_results.csv": "Day off assignments exported",
+            "time_off_unassigned.csv": "Day off unassigned entries",
+            "freetime_schedule.csv": "Freetime schedule exported",
+            "skills_schedule.csv": "Skills schedule exported",
+            "skills_unassigned.csv": "Skills unassigned entries",
+            "coverage_schedule.csv": "Coverage schedule exported",
+            "camper_assignments.csv": "Camper assignments exported",
+            "skills_not_run.csv": "Skills not run",
+            "camper_unassigned_log.csv": "Campers not fully assigned"
         }
 
         for filename, message in output_files.items():
@@ -1051,7 +1051,7 @@ class ProgramSchedules:
                             if cname:
                                 class_rosters[cname][p].append(row["id"])
         except Exception as e:
-            log_summary.append(f"⚠️ Could not load class config or rosters: {e}")
+            log_summary.append(f"Could not load class config or rosters: {e}")
             class_configs = {}
             class_rosters = {}
             inactive_classes = set()
@@ -1075,7 +1075,7 @@ class ProgramSchedules:
                     continue
                 assignable_classes.append(cname)
             if not assignable_classes:
-                log_summary.append(f"⚠️ Period {p}: NO CAPACITY for any more campers (all assignable classes full or inactive)")
+                log_summary.append(f"Period {p}: NO CAPACITY for any more campers (all assignable classes full or inactive)")
             else:
                 log_summary.append(f"Period {p}: Capacity available in {', '.join(assignable_classes)}")
 
@@ -1084,7 +1084,7 @@ class ProgramSchedules:
         with open(log_path, "w") as log_file:
             log_file.write("\n".join(log_summary))
 
-        print(f"✅ Summary log created at {log_path}")
+        print(f"Summary log created at {log_path}")
 
     def run_full_schedule(self):
         print("Starting scheduling process...")
