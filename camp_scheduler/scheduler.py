@@ -1086,6 +1086,66 @@ class ProgramSchedules:
 
         print(f"Summary log created at {log_path}")
 
+    def clean_output_files(self):
+        index_lookup = pd.read_csv(self.index_path).set_index("id").to_dict("index")
+
+        def get_info(staff_id, fields):
+            data = index_lookup.get(int(staff_id), {})
+            return [data.get(f, "") for f in fields]
+
+        def add_columns(input_path, output_path, insert_fields, insert_data_fn):
+            full_path = os.path.join(self.output_dir, input_path)
+            if not os.path.exists(full_path):
+                print(f"File not found: {input_path}")
+                return
+
+            df = pd.read_csv(full_path)
+            inserts = list(map(insert_data_fn, df["id"]))
+
+            for i, field in enumerate(insert_fields):
+                df.insert(i + 1, field, [row[i] for row in inserts])  # +1 so it comes after id
+
+            df.to_csv(os.path.join(self.output_dir, output_path), index=False)
+            print(f"Cleaned: {output_path}")
+
+        # Camper Assignments
+        def fix_camper_assignments():
+            path = os.path.join(self.output_dir, "camper_assignments.csv")
+            if os.path.exists(path):
+                df = pd.read_csv(path)
+                campers_path = self._get_data_path("camper_choices.csv")
+                campers_df = pd.read_csv(campers_path).set_index("id")
+                df.insert(1, "name", df["id"].map(campers_df["name"]))
+                df.insert(2, "cabin", df["id"].map(campers_df["cabin"]))
+                df.to_csv(path, index=False)
+                print("Cleaned: camper_assignments.csv")
+
+        def fix_camper_unassigned():
+            path = os.path.join(self.output_dir, "camper_unassigned_log.csv")
+            if os.path.exists(path):
+                df = pd.read_csv(path)
+                campers_path = self._get_data_path("camper_choices.csv")
+                campers_df = pd.read_csv(campers_path).set_index("id")
+                df.insert(1, "name", df["id"].map(campers_df["name"]))
+                df.insert(2, "cabin", df["id"].map(campers_df["cabin"]))
+                df.to_csv(path, index=False)
+                print("Cleaned: camper_unassigned_log.csv")
+
+        fix_camper_assignments()
+        fix_camper_unassigned()
+
+        # Staff-based files
+        staff_files = [
+            ("coverage_schedule.csv", "coverage_schedule.csv", ["name", "email"]),
+            ("freetime_schedule.csv", "freetime_schedule.csv", ["name", "email"]),
+            ("skills_schedule.csv", "skills_schedule.csv", ["email"]),
+            ("skills_unassigned.csv", "skills_unassigned.csv", ["name", "email"]),
+            ("time_off_unassigned.csv", "time_off_unassigned.csv", ["name", "email"]),
+        ]
+
+        for in_file, out_file, fields in staff_files:
+            add_columns(in_file, out_file, fields, lambda sid: get_info(sid, fields))
+
     def run_full_schedule(self):
         print("Starting scheduling process...")
         
@@ -1098,6 +1158,7 @@ class ProgramSchedules:
             self.assign_skills_classes()
             self.assign_campers_to_skills()
             self.export_output_summary()
+            self.clean_output_files()
             
         except Exception as e:
             print(f"Scheduling failed: {str(e)}")
