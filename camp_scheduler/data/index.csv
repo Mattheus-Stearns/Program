@@ -1,4 +1,4 @@
-id,personal email,name,lifeguard certification,archery certification,high ropes certification,fishing proficiency,coverage,department
+id,email,name,lifeguard certification,archery certification,high ropes certification,fishing proficiency,coverage,department
 100,staff0@camp.org,Staff Member 0,Yes,,,,,Program
 101,staff1@camp.org,Staff Member 1,Yes,Yes,,Yes,,Program
 102,staff2@camp.org,Staff Member 2,,,Yes,,,Mad City

@@ -62,18 +62,18 @@ class ProgramSchedules:
 
     def map_emails_to_ids_in_off_requests(self, off_requests):
         """
-        Replaces 'id' in off_requests using 'personal email' by matching it to self.index_data.
+        Replaces 'id' in off_requests using 'email' by matching it to self.index_data.
 
         Modifies each request in-place. If a match is not found, leaves 'id' as None and logs a warning.
         """
         email_to_id = {}
         for staff_id, row in self.index_data.items():
-            email = row.get("personal email", "").strip().lower()
+            email = row.get("email", "").strip().lower()
             if email:
                 email_to_id[email] = staff_id
 
         for request in off_requests:
-            email = request.get("personal email", "").strip().lower()
+            email = request.get("email", "").strip().lower()
             matched_id = email_to_id.get(email)
             if matched_id:
                 request["id"] = matched_id
@@ -137,7 +137,7 @@ class ProgramSchedules:
                 assignment = {
                     'id': person_id,
                     'name': request['name'],
-                    'email': request['personal email'],
+                    'email': request['email'],
                     'day_off': "Unassigned",
                     'night_off': "Unassigned",
                     'notes': request.get('notes', ''),
@@ -384,7 +384,7 @@ class ProgramSchedules:
 
             # Write directly to output
             freetime_path = self._write_output("freetime_schedule.csv", 
-                [["Day", "Date", "Location", "Assigned_Staff_ID"]] + output_rows)
+                [["Day", "Date", "Location", "id"]] + output_rows)
 
             print(f"Weekly freetime schedule saved to {freetime_path}")
 
@@ -399,7 +399,7 @@ class ProgramSchedules:
             for row in reader:
                 staff_id = int(row["id"])
                 self.staff_info[staff_id] = {
-                    "email": row["personal email"],
+                    "email": row["email"],
                     "name": row["name"],
                     "lifeguard": row["lifeguard certification"].strip().lower() == "yes",
                     "archery": row["archery certification"].strip().lower() == "yes",
@@ -1013,17 +1013,30 @@ class ProgramSchedules:
 
         for filename, message in output_files.items():
             path = os.path.join(self.output_dir, filename)
-            if os.path.exists(path):
-                if "unassigned" in filename or "not run" in filename:
-                    with open(path, newline='') as f:
-                        reader = csv.reader(f)
-                        rows = list(reader)
-                        count = len(rows) - 1 if rows else 0
+
+            if not os.path.exists(path):
+                log_summary.append(f"Missing file: {filename}")
+                continue
+
+            try:
+                # Check if file is empty or malformed
+                with open(path, newline='') as f:
+                    reader = csv.reader(f)
+                    rows = list(reader)
+                    if not rows or all(len(row) == 0 for row in rows):
+                        raise ValueError("Empty or malformed")
+
+                # Count rows if it's a "countable" file
+                if "unassigned" in filename or "not_run" in filename:
+                    count = len(rows) - 1 if len(rows) > 1 else 0
                     log_summary.append(f"{message}: {count}")
                 else:
                     log_summary.append(message)
-            else:
-                log_summary.append(f"⚠️ Missing file: {filename}")
+
+            except Exception:
+                os.remove(path)
+                log_summary.append(f"Deleted {filename} (empty or malformed)")
+                print(f"[INFO] Deleted empty/malformed file: {filename}")
 
         # == Period capacity summary ==
         try:
@@ -1090,20 +1103,36 @@ class ProgramSchedules:
         index_lookup = pd.read_csv(self.index_path).set_index("id").to_dict("index")
 
         def get_info(staff_id, fields):
-            data = index_lookup.get(int(staff_id), {})
+            try:
+                sid = int(staff_id)
+            except ValueError:
+                return [""] * len(fields)
+
+            data = index_lookup.get(sid, {})
+            if sid not in index_lookup:
+                print(f"[Warning] No data found for staff ID: {sid}")
             return [data.get(f, "") for f in fields]
 
-        def add_columns(input_path, output_path, insert_fields, insert_data_fn):
+        def add_columns(input_path, output_path, insert_fields, insert_data_fn, id_col="id"):
             full_path = os.path.join(self.output_dir, input_path)
             if not os.path.exists(full_path):
                 print(f"File not found: {input_path}")
                 return
 
-            df = pd.read_csv(full_path)
-            inserts = list(map(insert_data_fn, df["id"]))
+            try:
+                df = pd.read_csv(full_path)
+            except pd.errors.EmptyDataError:
+                print(f"Skipping {input_path} - file is empty or malformed")
+                return
+
+            if id_col not in df.columns:
+                print(f"Skipping {input_path} - missing '{id_col}' column")
+                return
+
+            inserts = list(map(insert_data_fn, df[id_col]))
 
             for i, field in enumerate(insert_fields):
-                df.insert(i + 1, field, [row[i] for row in inserts])  # +1 so it comes after id
+                df.insert(i + 1, field, [row[i] for row in inserts])  # +1 so it comes after ID
 
             df.to_csv(os.path.join(self.output_dir, output_path), index=False)
             print(f"Cleaned: {output_path}")
