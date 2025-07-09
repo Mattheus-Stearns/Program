@@ -324,6 +324,8 @@ class ProgramSchedules:
                         continue
                     if location in ["Archery", "Climbing"] and day in ["Tuesday", "Thursday"]:
                         continue
+                    if location == "Slingshot" and day not in ["Tuesday", "Thursday"]:
+                        continue
 
                     # Certification pools
                     if location == "Archery":
