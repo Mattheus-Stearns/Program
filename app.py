@@ -61,14 +61,19 @@ def run_command(command):
             scheduler.run_full_schedule()
         elif command == "assign-off-times":
             scheduler.assign_off_times()
+            scheduler.clean_output_files()
         elif command == "assign-freetime-locations":
             scheduler.assign_freetime_locations()
+            scheduler.clean_output_files()
         elif command == "generate-coverage-schedule":
             scheduler.generate_coverage_schedule()
+            scheduler.clean_output_files()
         elif command == "assign-skills-classes":
             scheduler.assign_skills_classes()
+            scheduler.clean_output_files()
         elif command == "assign-campers-to-skills":
             scheduler.assign_campers_to_skills()
+            scheduler.clean_output_files()
         else:
             messagebox.showwarning("Unknown Command", f"Unknown command: {command}")
             return
