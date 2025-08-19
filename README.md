@@ -4,6 +4,6 @@
 
 <h1>Scheduling Application</h1>
 
-<p>This is an application that is for businesses that need help with scheduling a large amount of people to different locations. Currently this package is only in development for YMCA Camp Abnaki, however this may soon come to a business near you! </p>
+<p>This is an application that is for businesses that need help with scheduling a large amount of people to different locations. Currently this package is only in development for a summer camp, however this may soon come to a business near you! </p>
 
 ### MAIN CONTRIBUTOR: Mattheus Stearns
